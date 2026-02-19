@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="ivory">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Museum of Us</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ======================================================
+     LOGIN SCREEN
+====================================================== -->
+<div id="loginScreen" class="login-screen">
+  <div class="grain-overlay"></div>
+  <div class="login-frame tl"></div>
+  <div class="login-frame tr"></div>
+  <div class="login-frame bl"></div>
+  <div class="login-frame br"></div>
+
+  <div class="login-box" id="loginBox">
+    <div class="login-brand">
+      <div class="login-badge">Museum of Us</div>
+      <h1 class="login-title">Selamat Datang</h1>
+      <p class="login-sub">Masuk untuk melanjutkan cerita kamu</p>
+    </div>
+
+    <!-- TABS -->
+    <div class="login-tabs">
+      <button class="ltab active" id="tabLogin">Masuk</button>
+      <button class="ltab" id="tabRegister">Daftar</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form class="lform" id="formLogin" autocomplete="off">
+      <div class="lfield">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Masukkan username" autocomplete="off"/>
+      </div>
+      <div class="lfield">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="loginPass" placeholder="Masukkan password" autocomplete="off"/>
+          <button type="button" class="pw-toggle" id="toggleLoginPw">👁</button>
+        </div>
+      </div>
+      <div class="lerror" id="loginError"></div>
+      <button type="submit" class="lbtn">Masuk →</button>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form class="lform hidden" id="formRegister" autocomplete="off">
+      <div class="lfield">
+        <label>Username</label>
+        <input type="text" id="regUser" placeholder="Buat username unik" autocomplete="off"/>
+      </div>
+      <div class="lfield">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="regPass" placeholder="Minimal 4 karakter" autocomplete="off"/>
+          <button type="button" class="pw-toggle" id="toggleRegPw">👁</button>
+        </div>
+      </div>
+      <div class="lfield">
+        <label>Konfirmasi Password</label>
+        <input type="password" id="regPassConfirm" placeholder="Ulangi password"/>
+      </div>
+      <div class="lerror" id="registerError"></div>
+      <button type="submit" class="lbtn">Daftar & Mulai →</button>
+    </form>
+
+    <div class="login-ornament">
+      <div class="ornament-line"></div><div class="ornament-dot"></div><div class="ornament-line"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================
+     MAIN APP (hidden until logged in)
+====================================================== -->
+<div id="mainApp" class="hidden">
+
+  <!-- THEME FAB -->
+  <div class="theme-fab" id="themeFab" title="Ganti Tema"><span>🎨</span></div>
+  <div class="theme-panel" id="themePanel">
+    <div class="theme-panel-title">Pilih Tema</div>
+    <div class="theme-options">
+      <button class="theme-opt active" data-theme="ivory"><span class="theme-swatch" style="background:linear-gradient(135deg,#faf8f5,#e8d5b0)"></span><span>Ivory</span></button>
+      <button class="theme-opt" data-theme="rose"><span class="theme-swatch" style="background:linear-gradient(135deg,#fff5f5,#f4a0b0)"></span><span>Rose</span></button>
+      <button class="theme-opt" data-theme="midnight"><span class="theme-swatch" style="background:linear-gradient(135deg,#1a1a2e,#c9a96e)"></span><span>Midnight</span></button>
+      <button class="theme-opt" data-theme="sage"><span class="theme-swatch" style="background:linear-gradient(135deg,#f4f7f4,#7a9e7e)"></span><span>Sage</span></button>
+      <button class="theme-opt" data-theme="lavender"><span class="theme-swatch" style="background:linear-gradient(135deg,#f5f0ff,#9b7fd4)"></span><span>Lavender</span></button>
+      <button class="theme-opt" data-theme="dusk"><span class="theme-swatch" style="background:linear-gradient(135deg,#2d1f3d,#e8a87c)"></span><span>Dusk</span></button>
+    </div>
+  </div>
+
+  <!-- MUSIC -->
+  <div class="music-control">
+    <label class="music-upload-btn" id="musicUploadLabel" title="Upload musik">
+      <input type="file" accept="audio/*" id="musicFileInput" style="display:none">
+      <span>🎵</span>
+    </label>
+    <button id="musicBtn" class="music-play-btn" style="display:none">
+      <span id="musicIcon">♪</span>
+      <span id="musicLabel">Play</span>
+    </button>
+    <div class="music-ripple" id="musicRipple"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="museum-nav" id="museumNav">
+    <div class="nav-logo">Museum of Us</div>
+    <ul class="nav-links">
+      <li><a href="#" data-page="landing" class="nav-link active">Home</a></li>
+      <li><a href="#" data-page="timeline" class="nav-link">Timeline</a></li>
+      <li><a href="#" data-page="gallery" class="nav-link">Gallery</a></li>
+    </ul>
+    <div class="nav-user-area">
+      <span class="nav-username" id="navUsername"></span>
+      <button class="nav-logout" id="logoutBtn" title="Keluar">⎋ Keluar</button>
+    </div>
+  </nav>
+
+  <div id="appWrapper">
+
+    <!-- ======== LANDING ======== -->
+    <section class="page active" id="page-landing">
+      <div class="landing-bg">
+        <div class="grain-overlay"></div>
+        <div class="landing-content">
+          <div class="landing-badge">Est. ∞</div>
+          <h1 class="landing-title">
+            <span class="title-line">Museum</span>
+            <span class="title-line italic">of Us</span>
+          </h1>
+          <p class="landing-subtitle">A curated exhibition of moments, memories,<br>and the beautiful story we continue to write.</p>
+          <button class="enter-btn" data-page="timeline">
+            <span>Enter the Museum</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="landing-ornament">
+          <div class="ornament-line"></div><div class="ornament-dot"></div><div class="ornament-line"></div>
+        </div>
+        <div class="landing-frame top-left"></div><div class="landing-frame top-right"></div>
+        <div class="landing-frame bottom-left"></div><div class="landing-frame bottom-right"></div>
+      </div>
+    </section>
+
+    <!-- ======== TIMELINE ======== -->
+    <section class="page" id="page-timeline">
+      <div class="page-header">
+        <span class="page-label">Exhibition I</span>
+        <h2 class="page-title">Our Journey</h2>
+        <p class="page-desc">Every chapter of our story, preserved in time.</p>
+      </div>
+      <div class="timeline-container">
+        <div class="timeline-line"></div>
+
+        <div class="timeline-item" data-side="left"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-0">14 Februari 2023</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="0">
+            <div class="tl-placeholder"><span>📸</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-0">Awal Segalanya</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-0">Hari pertama yang mengubah segalanya. Sebuah pertemuan sederhana yang menjadi titik awal cerita terbaik dalam hidup kami.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="right"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-1">20 Maret 2023</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="1">
+            <div class="tl-placeholder"><span>🌸</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-1">Kencan Pertama</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-1">Malam itu terasa seperti halaman pertama dari novel favorit — penuh antisipasi, keajaiban, dan tawa yang tulus.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="left"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-2">5 Mei 2023</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="2">
+            <div class="tl-placeholder"><span>☕</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-2">Pagi yang Tenang</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-2">Kopi hangat, pagi yang tenang, dan kamu di seberang meja. Momen sesederhana ini terasa seperti surga kecil yang kami temukan bersama.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="right"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-3">10 Juni 2023</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="3">
+            <div class="tl-placeholder"><span>🌅</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-3">Perjalanan Pertama</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-3">Bersama menjelajahi tempat baru — setiap sudut terasa lebih indah karena kamu ada di sampingku.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="left"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-4">17 Agustus 2023</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="4">
+            <div class="tl-placeholder"><span>🎆</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-4">Malam Penuh Bintang</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-4">Di bawah langit yang dipenuhi cahaya, kami berjanji untuk selalu saling menjaga. Malam itu langit terasa milik kami berdua saja.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="right"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-5">3 September 2023</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="5">
+            <div class="tl-placeholder"><span>🍂</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-5">Musim yang Berganti</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-5">Seperti musim yang selalu berganti namun tetap indah, begitu pula cerita kita — selalu ada keindahan di setiap babak baru.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="left"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-6">25 Desember 2023</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="6">
+            <div class="tl-placeholder"><span>🎄</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-6">Natal Pertama Kita</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-6">Rumah terasa jauh lebih hangat dengan kamu di dalamnya. Liburan pertama yang kita rayakan bersama, penuh tawa dan kenangan.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="right"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-7">1 Januari 2024</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="7">
+            <div class="tl-placeholder"><span>🥂</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-7">Tahun Baru Bersama</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-7">Pergantian tahun pertama yang kita rayakan bersama. Doa dan harapan yang sama — untuk terus berjalan bersama di setiap tahun.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="left"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-8">14 Februari 2024</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="8">
+            <div class="tl-placeholder"><span>💫</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-8">Satu Tahun Bersama</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-8">Setahun penuh kenangan, tawa, air mata, dan cinta. 365 hari yang mengajarkan kami arti kebersamaan yang sesungguhnya.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="right"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-9">30 Maret 2024</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="9">
+            <div class="tl-placeholder"><span>🌊</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-9">Tepi Pantai yang Tenang</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-9">Angin laut, pasir putih, dan gelak tawa. Perjalanan spontan yang menjadi salah satu kenangan paling berharga yang kami miliki.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="left"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-10">20 Juli 2024</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="10">
+            <div class="tl-placeholder"><span>🌻</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-10">Hari yang Cerah</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-10">Seperti bunga matahari yang selalu menghadap cahaya, aku pun selalu menemukan kebahagiaan ketika menghadap ke arahmu.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="right"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-11">14 Oktober 2024</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="11">
+            <div class="tl-placeholder"><span>🍁</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-11">Merayakan Kita</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-11">Tidak perlu alasan khusus untuk merayakan cinta. Hari ini kami rayakan hanya karena kami ada dan bersama.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="left"><div class="timeline-dot"></div><div class="timeline-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-12">31 Desember 2024</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="12">
+            <div class="tl-placeholder"><span>🎇</span><small>Klik untuk upload foto</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-12">Malam Terakhir Tahun Ini</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-12">Melihat ke belakang kami tersenyum, melihat ke depan kami tidak sabar. Bersama kamu, setiap hari adalah hadiah.</p>
+        </div></div>
+
+        <div class="timeline-item" data-side="right"><div class="timeline-dot"></div><div class="timeline-card future-card">
+          <div class="timeline-date editable" contenteditable="true" data-key="tl-date-13">Hari Ini & Seterusnya</div>
+          <div class="timeline-img-wrap"><div class="tl-photo-zone" data-tl="13">
+            <div class="tl-placeholder special"><span>✨</span><small>Masih berlanjut...</small></div>
+            <input type="file" accept="image/*" class="tl-file-input">
+          </div></div>
+          <h3 class="timeline-heading editable" contenteditable="true" data-key="tl-heading-13">Dan Seterusnya...</h3>
+          <p class="timeline-text editable" contenteditable="true" data-key="tl-text-13">Cerita ini belum berakhir. Setiap harinya adalah halaman baru yang menunggu untuk ditulis bersama — penuh kejutan dan cinta.</p>
+        </div></div>
+
+      </div>
+    </section>
+
+    <!-- ======== GALLERY ======== -->
+    <section class="page" id="page-gallery">
+      <div class="page-header">
+        <span class="page-label">Exhibition II</span>
+        <h2 class="page-title">Gallery of Memories</h2>
+        <p class="page-desc">Moments captured, forever cherished.</p>
+      </div>
+      <div class="gallery-container">
+        <div class="gallery-grid" id="galleryGrid">
+
+          <div class="gallery-item" data-gidx="0"><input type="file" accept="image/*" class="gallery-file-input" id="gf0">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🌸</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="0">⊕ Lihat</button><label class="gal-upload-btn" for="gf0">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-0">Momen yang selalu kami rindukan.</span></div></div>
+
+          <div class="gallery-item tall" data-gidx="1"><input type="file" accept="image/*" class="gallery-file-input" id="gf1">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🌅</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="1">⊕ Lihat</button><label class="gal-upload-btn" for="gf1">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-1">Tempat favorit kami berdua.</span></div></div>
+
+          <div class="gallery-item" data-gidx="2"><input type="file" accept="image/*" class="gallery-file-input" id="gf2">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">☀️</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="2">⊕ Lihat</button><label class="gal-upload-btn" for="gf2">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-2">Senyummu adalah hal paling indah.</span></div></div>
+
+          <div class="gallery-item wide" data-gidx="3"><input type="file" accept="image/*" class="gallery-file-input" id="gf3">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🗺️</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="3">⊕ Lihat</button><label class="gal-upload-btn" for="gf3">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-3">Petualangan yang tidak terlupakan.</span></div></div>
+
+          <div class="gallery-item" data-gidx="4"><input type="file" accept="image/*" class="gallery-file-input" id="gf4">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🕯️</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="4">⊕ Lihat</button><label class="gal-upload-btn" for="gf4">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-4">Ketika waktu terasa berhenti.</span></div></div>
+
+          <div class="gallery-item" data-gidx="5"><input type="file" accept="image/*" class="gallery-file-input" id="gf5">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🎞️</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="5">⊕ Lihat</button><label class="gal-upload-btn" for="gf5">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-5">Momen yang kami abadikan.</span></div></div>
+
+          <div class="gallery-item tall" data-gidx="6"><input type="file" accept="image/*" class="gallery-file-input" id="gf6">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">💌</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="6">⊕ Lihat</button><label class="gal-upload-btn" for="gf6">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-6">Cerita di balik foto ini...</span></div></div>
+
+          <div class="gallery-item" data-gidx="7"><input type="file" accept="image/*" class="gallery-file-input" id="gf7">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">✨</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="7">⊕ Lihat</button><label class="gal-upload-btn" for="gf7">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-7">Selalu terasa seperti mimpi.</span></div></div>
+
+          <div class="gallery-item wide" data-gidx="8"><input type="file" accept="image/*" class="gallery-file-input" id="gf8">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🌿</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="8">⊕ Lihat</button><label class="gal-upload-btn" for="gf8">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-8">Bersama, segalanya terasa mungkin.</span></div></div>
+
+          <div class="gallery-item" data-gidx="9"><input type="file" accept="image/*" class="gallery-file-input" id="gf9">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🏡</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="9">⊕ Lihat</button><label class="gal-upload-btn" for="gf9">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-9">Sudut kecil dunia yang kami cintai.</span></div></div>
+
+          <div class="gallery-item" data-gidx="10"><input type="file" accept="image/*" class="gallery-file-input" id="gf10">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">😄</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="10">⊕ Lihat</button><label class="gal-upload-btn" for="gf10">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-10">Tawa yang paling tulus.</span></div></div>
+
+          <div class="gallery-item" data-gidx="11"><input type="file" accept="image/*" class="gallery-file-input" id="gf11">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🌙</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="11">⊕ Lihat</button><label class="gal-upload-btn" for="gf11">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-11">Langit yang kami tatap bersama.</span></div></div>
+
+          <div class="gallery-item tall" data-gidx="12"><input type="file" accept="image/*" class="gallery-file-input" id="gf12">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🛤️</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="12">⊕ Lihat</button><label class="gal-upload-btn" for="gf12">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-12">Perjalanan panjang yang indah.</span></div></div>
+
+          <div class="gallery-item" data-gidx="13"><input type="file" accept="image/*" class="gallery-file-input" id="gf13">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">💞</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="13">⊕ Lihat</button><label class="gal-upload-btn" for="gf13">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-13">Dua hati, satu cerita.</span></div></div>
+
+          <div class="gallery-item" data-gidx="14"><input type="file" accept="image/*" class="gallery-file-input" id="gf14">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🔮</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="14">⊕ Lihat</button><label class="gal-upload-btn" for="gf14">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-14">Setiap detail yang kami ingat.</span></div></div>
+
+          <div class="gallery-item wide" data-gidx="15"><input type="file" accept="image/*" class="gallery-file-input" id="gf15">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🎨</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="15">⊕ Lihat</button><label class="gal-upload-btn" for="gf15">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-15">Satu frame, seribu kenangan.</span></div></div>
+
+          <div class="gallery-item" data-gidx="16"><input type="file" accept="image/*" class="gallery-file-input" id="gf16">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🫶</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="16">⊕ Lihat</button><label class="gal-upload-btn" for="gf16">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-16">Kamu adalah rumah bagiku.</span></div></div>
+
+          <div class="gallery-item" data-gidx="17"><input type="file" accept="image/*" class="gallery-file-input" id="gf17">
+            <div class="gallery-visual"><div class="gallery-img-area"><img class="gallery-img" src="" alt="" style="display:none"><div class="gallery-empty-icon">🌺</div></div>
+            <div class="gallery-actions"><button class="gal-view-btn" data-gidx="17">⊕ Lihat</button><label class="gal-upload-btn" for="gf17">📷 Upload</label></div></div>
+            <div class="gallery-caption-bar"><span class="gallery-caption editable" contenteditable="true" data-key="gl-caption-17">Momen sederhana yang luar biasa.</span></div></div>
+
+        </div>
+      </div>
+    </section>
+
+  </div><!-- appWrapper -->
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-content">
+      <div class="modal-img-wrap" id="modalImgWrap"></div>
+      <div class="modal-caption" id="modalCaption"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <audio id="bgMusic" loop></audio>
+
+</div><!-- mainApp -->
+
+<script src="script.js"></script>
+</body>
+</html>
