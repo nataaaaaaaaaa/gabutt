@@ -9,11 +9,12 @@
    Taruh file di folder music/ lalu isi src & title
 ================================================== */
 var PLAYLIST = [
-    { title: "LANY - you",  src: "music/LANY - you.mp3"  },
-    { title: "Sal Priadi - Kita usahakan rumah itu",  src: "music/Sal Priadi - Kita usahakan rumah itu.mp3"  },
-    { title: "JVKE - her",  src: "music/JVKE - her.mp3"  },
-    { title: "Raim Laode - Lesung Pipi",  src: "music/Raim Laode - Lesung Pipi.mp3"  },
+  { title: "LANY - you",  src: "music/LANY - you.mp3"  },
+  { title: "Sal Priadi - Kita usahakan rumah itu",  src: "music/Sal Priadi - Kita usahakan rumah itu.mp3"  },
+  { title: "JVKE - her",  src: "music/JVKE - her.mp3"  },
+  { title: "Raim Laode - Lesung Pipi",  src: "music/Raim Laode - Lesung Pipi.mp3"  },
 ];
+if(typeof GALLERY_DATA==='undefined'){ window.GALLERY_DATA=[]; }
 
 /* ==================================================
    GALLERY DATA — 18 slot polaroid
@@ -236,16 +237,24 @@ formRegister.addEventListener('submit',function(e){
    ENTER APP
 ================================================== */
 function enterApp(username){
-  currentUser=username; userData=getUserData(username);
+  currentUser=username; userData=getUserData(username)||{};
   navUsername.textContent=username;
-  loginScreen.classList.add('fade-out');
-  setTimeout(function(){loginScreen.classList.add('hidden');},500);
-  mainApp.classList.remove('hidden');
-  restoreState(); buildPlaylistUI(); buildPolaroidBoard();
-  buildFilmHoles();
-  var targetPage=userData.lastPage||getLastPage()||'landing';
-  setPageImmediate(targetPage);
-  if(PLAYLIST.length>0) setTimeout(function(){playTrack(0);},700);
+  try{
+    loginScreen.classList.add('fade-out');
+    setTimeout(function(){loginScreen.classList.add('hidden');},500);
+    mainApp.classList.remove('hidden');
+    restoreState();
+    buildPlaylistUI();
+    buildPolaroidBoard();
+    buildFilmHoles();
+    var targetPage=userData.lastPage||getLastPage()||'landing';
+    setPageImmediate(targetPage);
+    if(PLAYLIST.length>0) setTimeout(function(){playTrack(0);},700);
+  }catch(err){
+    console.error('enterApp error',err);
+    showToast('Ada error saat memuat. Kembali ke login.',3200);
+    showLoginScreen();
+  }
 }
 
 // Auto-enter jika sesi valid; jika kredensial hilang tapi data masih ada, tetap coba masuk
@@ -377,7 +386,8 @@ document.querySelectorAll('.theme-opt').forEach(function(btn){
 ================================================== */
 var pCtx, pW=0, pH=0, pPts=[], pActive=false, pRaf;
 function startParticles(){
-  if(!particleCanvas)return;
+  if(!particleCanvas){return;}
+  if(!Array.isArray(pPts)){pPts=[];}
   particleCanvas.classList.add('active');
   pCtx=particleCanvas.getContext('2d');
   pActive=true; if(pPts.length===0)initPts();pLoop();
@@ -478,75 +488,79 @@ document.querySelectorAll('.tl-photo-zone').forEach(function(zone){
 ================================================== */
 var TILT_PRESETS=[-8,-5,-3,0,2,4,7,-6,3,-2,6,-4,1,-7,5,-1,8,-3];
 function buildPolaroidBoard(){
-  var board=$('polaroidBoard');if(!board)return;
-  var gallery=Array.isArray(GALLERY_DATA)?GALLERY_DATA:[];
-  board.innerHTML='';
-  // Board needs relative positioning for absolute children; set min-height
-  var cols=window.innerWidth<500?2:window.innerWidth<800?3:4;
-  var cellW=(window.innerWidth>800?210:180), cellH=cellW+90;
-  var boardW=board.offsetWidth||window.innerWidth-80;
-  board.style.minHeight=(Math.ceil(gallery.length/cols)*cellH+100)+'px';
+  try{
+    var board=$('polaroidBoard');if(!board)return;
+    var gallery=[];
+    if(typeof GALLERY_DATA!=='undefined' && Array.isArray(GALLERY_DATA)){
+      gallery=GALLERY_DATA;
+    }
+    if(!Array.isArray(gallery)){gallery=[];}
+    board.innerHTML='';
+    var cols=window.innerWidth<500?2:window.innerWidth<800?3:4;
+    var cellW=(window.innerWidth>800?210:180), cellH=cellW+90;
+    var boardW=board.offsetWidth||window.innerWidth-80;
+    var glen=Array.isArray(gallery)?gallery.length:0;
+    board.style.minHeight=(Math.ceil(glen/cols)*cellH+100)+'px';
 
-  var colHeights=[];for(var c=0;c<cols;c++)colHeights.push(60);
-  var gapX=Math.max(20,(boardW-cols*cellW)/(cols+1));
+    var colHeights=[];for(var c=0;c<cols;c++)colHeights.push(60);
+    var gapX=Math.max(20,(boardW-cols*cellW)/(cols+1));
 
-  gallery.forEach(function(data,i){
-    var col=i%cols;
-    var x=gapX+col*(cellW+gapX);
-    var y=colHeights[col];
-    colHeights[col]+=cellH+Math.random()*30+20;
-    var tilt=TILT_PRESETS[i%TILT_PRESETS.length]+(Math.random()*2-1);
+    (Array.isArray(gallery)?gallery:[]).forEach(function(data,i){
+      if(!data)data={title:'',emoji:'🖼️'};
+      var col=i%cols;
+      var x=gapX+col*(cellW+gapX);
+      var y=colHeights[col];
+      colHeights[col]+=cellH+Math.random()*30+20;
+      var tilt=TILT_PRESETS[i%TILT_PRESETS.length]+(Math.random()*2-1);
 
-    var wrap=document.createElement('div');
-    wrap.className='polaroid-wrap pol-hidden';
-    wrap.style.cssText='left:'+x+'px;top:'+y+'px;z-index:'+(10+i)+';transform:rotate('+tilt+'deg)';
-    wrap.dataset.idx=i;wrap.dataset.tilt=tilt;
+      var wrap=document.createElement('div');
+      wrap.className='polaroid-wrap pol-hidden';
+      wrap.style.cssText='left:'+x+'px;top:'+y+'px;z-index:'+(10+i)+';transform:rotate('+tilt+'deg)';
+      wrap.dataset.idx=i;wrap.dataset.tilt=tilt;
 
-    var pol=document.createElement('div');pol.className='polaroid';
+      var pol=document.createElement('div');pol.className='polaroid';
 
-    var imgArea=document.createElement('div');imgArea.className='polaroid-img-area';
-    var img=document.createElement('img');img.className='polaroid-img';img.alt='';
-    var icon=document.createElement('div');icon.className='polaroid-empty-icon';icon.textContent=data.emoji;
-    imgArea.appendChild(img);imgArea.appendChild(icon);
+      var imgArea=document.createElement('div');imgArea.className='polaroid-img-area';
+      var img=document.createElement('img');img.className='polaroid-img';img.alt='';
+      var icon=document.createElement('div');icon.className='polaroid-empty-icon';icon.textContent=data.emoji||'🖼️';
+      imgArea.appendChild(img);imgArea.appendChild(icon);
 
-    var actions=document.createElement('div');actions.className='polaroid-actions';
-    var viewBtn=document.createElement('button');viewBtn.className='pol-view-btn';viewBtn.textContent='⊕ Lihat';
-    var uid='pgf'+i;
-    var uploadLbl=document.createElement('label');uploadLbl.className='pol-upload-btn';uploadLbl.htmlFor=uid;uploadLbl.textContent='📷 Upload';
-    var fileInp=document.createElement('input');fileInp.type='file';fileInp.accept='image/*';
-    fileInp.className='polaroid-file-input';fileInp.id=uid;fileInp.dataset.pidx=i;
-    fileInp.addEventListener('change',onPolaroidUpload);
-    uploadLbl.appendChild(fileInp);
-    actions.appendChild(viewBtn);actions.appendChild(uploadLbl);
+      var actions=document.createElement('div');actions.className='polaroid-actions';
+      var viewBtn=document.createElement('button');viewBtn.className='pol-view-btn';viewBtn.textContent='⊕ Lihat';
+      var uid='pgf'+i;
+      var uploadLbl=document.createElement('label');uploadLbl.className='pol-upload-btn';uploadLbl.htmlFor=uid;uploadLbl.textContent='📷 Upload';
+      var fileInp=document.createElement('input');fileInp.type='file';fileInp.accept='image/*';
+      fileInp.className='polaroid-file-input';fileInp.id=uid;fileInp.dataset.pidx=i;
+      fileInp.addEventListener('change',onPolaroidUpload);
+      uploadLbl.appendChild(fileInp);
+      actions.appendChild(viewBtn);actions.appendChild(uploadLbl);
 
-    var capArea=document.createElement('div');capArea.className='polaroid-caption-area';
-    var cap=document.createElement('div');cap.className='polaroid-caption editable';
-    cap.contentEditable='true';cap.dataset.key='gl-caption-'+i;
-    var savedCap=userData['gl-caption-'+i];
-    cap.textContent=savedCap||data.title;
-    capArea.appendChild(cap);
+      var capArea=document.createElement('div');capArea.className='polaroid-caption-area';
+      var cap=document.createElement('div');cap.className='polaroid-caption editable';
+      cap.contentEditable='true';cap.dataset.key='gl-caption-'+i;
+      var savedCap=userData['gl-caption-'+i];
+      cap.textContent=savedCap||data.title||'';
+      capArea.appendChild(cap);
 
-    pol.appendChild(imgArea);pol.appendChild(actions);pol.appendChild(capArea);
-    wrap.appendChild(pol);board.appendChild(wrap);
+      pol.appendChild(imgArea);pol.appendChild(actions);pol.appendChild(capArea);
+      wrap.appendChild(pol);board.appendChild(wrap);
 
-    // Restore photo
-    var savedSrc=userData['gl-photo-'+i];
-    if(savedSrc){img.src=savedSrc;img.style.display='block';imgArea.classList.add('has-photo');wrap.dataset.uploadedSrc=savedSrc;}
+      var savedSrc=userData['gl-photo-'+i];
+      if(savedSrc){img.src=savedSrc;img.style.display='block';imgArea.classList.add('has-photo');wrap.dataset.uploadedSrc=savedSrc;}
 
-    // View modal
-    viewBtn.addEventListener('click',function(e){e.stopPropagation();openModal(wrap,cap.textContent);});
-
-    // Drag
-    makeDraggable(wrap,tilt);
-    // 3D tilt on hover
-    pol.addEventListener('mousemove',function(e){
-      var r=pol.getBoundingClientRect();
-      var rx=((e.clientY-r.top)/r.height-.5)*-6;
-      var ry=((e.clientX-r.left)/r.width-.5)*6;
-      pol.style.transform='perspective(600px) rotateX('+rx+'deg) rotateY('+ry+'deg)';
+      viewBtn.addEventListener('click',function(e){e.stopPropagation();openModal(wrap,cap.textContent);});
+      makeDraggable(wrap,tilt);
+      pol.addEventListener('mousemove',function(e){
+        var r=pol.getBoundingClientRect();
+        var rx=((e.clientY-r.top)/r.height-.5)*-6;
+        var ry=((e.clientX-r.left)/r.width-.5)*6;
+        pol.style.transform='perspective(600px) rotateX('+rx+'deg) rotateY('+ry+'deg)';
+      });
+      pol.addEventListener('mouseleave',function(){pol.style.transform='';});
     });
-    pol.addEventListener('mouseleave',function(){pol.style.transform='';});
-  });
+  }catch(err){
+    console.error('buildPolaroidBoard error',err);
+  }
 }
 
 function onPolaroidUpload(){
