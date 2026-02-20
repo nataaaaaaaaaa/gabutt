@@ -236,20 +236,20 @@ function enterApp(username){
   mainApp.classList.remove('hidden');
   restoreState(); buildPlaylistUI(); buildPolaroidBoard();
   buildFilmHoles();
-  var landing=document.getElementById('page-landing');
-  landing.classList.add('active');
-  setTimeout(function(){landing.classList.add('visible');startParticles();},80);
+  var targetPage=userData.lastPage||'landing';
+  setPageImmediate(targetPage);
   if(PLAYLIST.length>0) setTimeout(function(){playTrack(0);},700);
 }
 
-// Jangan auto-login agar layar masuk tidak langsung menghilang; prefills username jika ada sesi tersimpan
+// Auto-enter jika sesi valid, tetap prefills jika tidak valid
 (function(){
   var s=getSession(), users=getUsers();
   if(s && users[s]){
-    $('loginUser').value=s;
-    loginError.textContent='Sesi sebelumnya tersimpan. Masukkan password untuk melanjutkan.';
+    enterApp(s);
   }else if(s){
     clearSession();
+    $('loginUser').value=s;
+    loginError.textContent='Sesi sebelumnya tersimpan. Masukkan password untuk melanjutkan.';
   }
 })();
 
@@ -312,6 +312,7 @@ function navigateTo(pageId){
     from.classList.remove('active');to.classList.add('active');void to.offsetWidth;to.classList.add('visible');
     window.scrollTo({top:0,behavior:'smooth'});
     currentPage=pageId;
+    if(currentUser){userData.lastPage=pageId;saveUserDataNow();}
     document.querySelectorAll('.nav-link').forEach(function(l){l.classList.toggle('active',l.dataset.page===pageId);});
     nav.classList.toggle('visible',pageId!=='landing');
     if(pageId==='landing')startParticles(); else stopParticles();
@@ -326,6 +327,22 @@ document.querySelectorAll('.nav-link').forEach(function(l){
 document.querySelectorAll('button[data-page]').forEach(function(b){
   b.addEventListener('click',function(){navigateTo(b.dataset.page);});
 });
+
+// Immediate page set on first load (no transitions) used after login/auto-enter
+function setPageImmediate(pageId){
+  var to=document.getElementById('page-'+pageId);
+  if(!to){pageId='landing';to=document.getElementById('page-landing');}
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','visible');});
+  to.classList.add('active','visible');
+  currentPage=pageId;
+  document.querySelectorAll('.nav-link').forEach(function(l){l.classList.toggle('active',l.dataset.page===pageId);});
+  nav.classList.toggle('visible',pageId!=='landing');
+  if(pageId==='landing')startParticles(); else stopParticles();
+  if(pageId==='timeline')setTimeout(revealTimeline,200);
+  if(pageId==='gallery') setTimeout(revealPolaroids,200);
+  if(pageId==='map')     setTimeout(initMap,200);
+  if(currentUser){userData.lastPage=pageId;saveUserDataNow();}
+}
 
 /* ==================================================
    THEME
@@ -723,34 +740,45 @@ mpOpen.addEventListener('click',function(e){e.stopPropagation();mpBar.classList.
 $('mpClose').addEventListener('click',function(){mpBar.classList.remove('panel-open');});
 document.addEventListener('click',function(e){if(!mpBar.contains(e.target))mpBar.classList.remove('panel-open');});
 
-// Drag the music pill/panel
+// Drag the music pill/panel (supports mouse + touch)
 function startMpDrag(e){
-  if(e.button!==0)return;
   if(mpBar.classList.contains('panel-open'))return; // avoid dragging while panel open
   if(e.target.closest('.mp-panel'))return;
+  var isMouse=e.type==='mousedown';
+  if(isMouse && e.button!==0)return;
   mpDragState.active=true;
-  mpDragState.sx=e.clientX; mpDragState.sy=e.clientY;
+  var point=isMouse?{x:e.clientX,y:e.clientY}:{x:e.touches[0].clientX,y:e.touches[0].clientY};
+  mpDragState.sx=point.x; mpDragState.sy=point.y;
   var r=mpBar.getBoundingClientRect(); mpDragState.ox=r.left; mpDragState.oy=r.top;
-  document.addEventListener('mousemove',onMpDrag);
-  document.addEventListener('mouseup',endMpDrag);
+  var moveEvt=isMouse?'mousemove':'touchmove';
+  var endEvt=isMouse?'mouseup':'touchend';
+  document.addEventListener(moveEvt,onMpDrag,{passive:false});
+  document.addEventListener(endEvt,endMpDrag,{passive:false});
 }
 function onMpDrag(e){
   if(!mpDragState.active)return;
-  var x=mpDragState.ox+(e.clientX-mpDragState.sx);
-  var y=mpDragState.oy+(e.clientY-mpDragState.sy);
+  var isMouse=e.type==='mousemove';
+  var point=isMouse?{x:e.clientX,y:e.clientY}:{x:e.touches[0].clientX,y:e.touches[0].clientY};
+  var x=mpDragState.ox+(point.x-mpDragState.sx);
+  var y=mpDragState.oy+(point.y-mpDragState.sy);
   x=Math.max(6,Math.min(window.innerWidth-140,x));
   y=Math.max(6,Math.min(window.innerHeight-60,y));
   mpBar.style.left=x+'px'; mpBar.style.top=y+'px'; mpBar.style.bottom='auto';
+  if(!isMouse)e.preventDefault();
 }
-function endMpDrag(){
+function endMpDrag(e){
   if(!mpDragState.active)return;
   mpDragState.active=false;
   document.removeEventListener('mousemove',onMpDrag);
   document.removeEventListener('mouseup',endMpDrag);
+  document.removeEventListener('touchmove',onMpDrag);
+  document.removeEventListener('touchend',endMpDrag);
   var r=mpBar.getBoundingClientRect();
   if(currentUser){userData.mpPos={x:r.left,y:r.top};saveUserDataNow();}
+  if(e && e.type==='touchend')e.preventDefault();
 }
 mpBar.addEventListener('mousedown',startMpDrag);
+mpBar.addEventListener('touchstart',startMpDrag,{passive:true});
 
 bgMusic.addEventListener('timeupdate',function(){
   if(!bgMusic.duration)return;
