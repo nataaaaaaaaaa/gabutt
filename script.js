@@ -61,6 +61,7 @@ var currentTrack=-1, isPlaying=false;
 var mapInstance=null, mapPins=[];
 var leafletMap=null, leafletMarkers=[];
 var mpDragState={active:false,sx:0,sy:0,ox:0,oy:0};
+var isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
 /* ==================================================
    DOM refs
@@ -81,9 +82,8 @@ var mpVolume=$('mpVolume');
 var particleCanvas=$('particleCanvas'), cursorCanvas=$('cursorCanvas');
 
 // Touch detection to restore normal cursors on mobile/tablet
-if('ontouchstart' in window || navigator.maxTouchPoints>0){
+if(isTouch){
   document.documentElement.classList.add('is-touch');
-  // Disable cursor trail canvas on touch devices for safety
   if(cursorCanvas){cursorCanvas.style.display='none';}
 }
 
@@ -102,6 +102,7 @@ function fmtTime(s){if(isNaN(s)||s===Infinity)return'0:00';var m=Math.floor(s/60
    CURSOR TRAIL  ♡ hearts
 ================================================== */
 (function(){
+  if(isTouch){return;} // skip cursor trail on touch devices
   var cvs=cursorCanvas, ctx=cvs.getContext('2d');
   var W=0, H=0, particles=[], mx=0, my=0;
   function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight;}
