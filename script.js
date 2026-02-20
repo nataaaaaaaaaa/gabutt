@@ -83,6 +83,8 @@ var particleCanvas=$('particleCanvas'), cursorCanvas=$('cursorCanvas');
 // Touch detection to restore normal cursors on mobile/tablet
 if('ontouchstart' in window || navigator.maxTouchPoints>0){
   document.documentElement.classList.add('is-touch');
+  // Disable cursor trail canvas on touch devices for safety
+  if(cursorCanvas){cursorCanvas.style.display='none';}
 }
 
 /* ==================================================
