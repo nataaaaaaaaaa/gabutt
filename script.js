@@ -20,7 +20,7 @@ if(typeof GALLERY_DATA==='undefined'){ window.GALLERY_DATA=[]; }
    GALLERY DATA — 18 slot polaroid
    title=judul caption, emoji=ikon placeholder
 ================================================== */
-var GALLERY_DATA = [
+var DEFAULT_GALLERY_DATA = [
   {title:"Momen yang selalu kami rindukan.",     emoji:"🌸"},
   {title:"Tempat favorit kami berdua.",           emoji:"🌅"},
   {title:"Senyummu adalah hal paling indah.",     emoji:"☀️"},
@@ -40,6 +40,11 @@ var GALLERY_DATA = [
   {title:"Kamu adalah rumah bagiku.",             emoji:"🫶"},
   {title:"Momen sederhana yang luar biasa.",      emoji:"🌺"},
 ];
+// Gunakan array utama, jatuh ke default jika kosong
+var GALLERY_DATA = (typeof GALLERY_DATA!=='undefined' && Array.isArray(GALLERY_DATA) && GALLERY_DATA.length>0)
+  ? GALLERY_DATA
+  : DEFAULT_GALLERY_DATA.slice();
+if(typeof window!=='undefined'){window.GALLERY_DATA=GALLERY_DATA;}
 
 /* ==================================================
    STORAGE
@@ -494,7 +499,9 @@ function buildPolaroidBoard(){
     if(typeof GALLERY_DATA!=='undefined' && Array.isArray(GALLERY_DATA)){
       gallery=GALLERY_DATA;
     }
-    if(!Array.isArray(gallery)){gallery=[];}
+    if(!Array.isArray(gallery) || gallery.length===0){
+      gallery=DEFAULT_GALLERY_DATA.slice();
+    }
     board.innerHTML='';
     var cols=window.innerWidth<500?2:window.innerWidth<800?3:4;
     var cellW=(window.innerWidth>800?210:180), cellH=cellW+90;
