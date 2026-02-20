@@ -4,11 +4,30 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Museum of Us</title>
-  <link rel="stylesheet" href="style.css?v=3"/>
+  <link rel="stylesheet" href="https://nataaaaaaaaaa.github.io/gabutt/style.css?v=4"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&family=Great+Vibes&display=swap" rel="stylesheet"/>
 </head>
 <body>
+
+<script>
+// Fallback: if stylesheet fails to apply on some devices, inject another link
+(function(){
+  var applied=false;
+  function hasStyledBody(){
+    var cs=getComputedStyle(document.body);
+    return cs.backgroundColor!=='' && cs.backgroundColor!=='rgba(0, 0, 0, 0)';
+  }
+  setTimeout(function(){
+    applied=hasStyledBody();
+    if(applied)return;
+    var l=document.createElement('link');
+    l.rel='stylesheet';
+    l.href='https://raw.githubusercontent.com/nataaaaaaaaaa/gabutt/main/style.css?v=4';
+    document.head.appendChild(l);
+  },1200);
+})();
+</script>
 
 <!-- CURSOR TRAIL -->
 <canvas id="cursorCanvas"></canvas>
@@ -360,6 +379,6 @@
 </div><!-- mainApp -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="script.js?v=3"></script>
+<script src="https://nataaaaaaaaaa.github.io/gabutt/script.js?v=4"></script>
 </body>
 </html>
