@@ -479,17 +479,18 @@ document.querySelectorAll('.tl-photo-zone').forEach(function(zone){
 var TILT_PRESETS=[-8,-5,-3,0,2,4,7,-6,3,-2,6,-4,1,-7,5,-1,8,-3];
 function buildPolaroidBoard(){
   var board=$('polaroidBoard');if(!board)return;
+  var gallery=Array.isArray(GALLERY_DATA)?GALLERY_DATA:[];
   board.innerHTML='';
   // Board needs relative positioning for absolute children; set min-height
   var cols=window.innerWidth<500?2:window.innerWidth<800?3:4;
   var cellW=(window.innerWidth>800?210:180), cellH=cellW+90;
   var boardW=board.offsetWidth||window.innerWidth-80;
-  board.style.minHeight=(Math.ceil(GALLERY_DATA.length/cols)*cellH+100)+'px';
+  board.style.minHeight=(Math.ceil(gallery.length/cols)*cellH+100)+'px';
 
   var colHeights=[];for(var c=0;c<cols;c++)colHeights.push(60);
   var gapX=Math.max(20,(boardW-cols*cellW)/(cols+1));
 
-  GALLERY_DATA.forEach(function(data,i){
+  gallery.forEach(function(data,i){
     var col=i%cols;
     var x=gapX+col*(cellW+gapX);
     var y=colHeights[col];
