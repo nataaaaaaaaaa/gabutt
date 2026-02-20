@@ -16,6 +16,7 @@
 html{scroll-behavior:smooth;}
 body{font-family:var(--font-sans);background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh;transition:background .5s,color .5s;cursor:none;}
 a{color:inherit;}
+.is-touch body,.is-touch button,.is-touch input,.is-touch textarea,.is-touch select,.is-touch a,.is-touch .nav-link,.is-touch .mp-pill,.is-touch .mp-panel,.is-touch .polaroid-wrap,.is-touch .timeline-item,.is-touch .map-pin-item,.is-touch .tl-photo-zone{cursor:auto;}
 .hidden{display:none!important;}
 .grain-overlay{position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5;}
 
@@ -296,4 +297,37 @@ a{color:inherit;}
 @media(max-width:480px){
   .polaroid{width:140px;padding:10px 10px 42px}
   .mp-panel{width:calc(100vw - 24px)}
+}
+@media(max-width:1024px){
+  .museum-nav{padding:0 20px;gap:16px;height:64px}
+  .nav-links{gap:16px}
+  .page-header{padding:96px 28px 50px}
+  .timeline-container{padding:60px 20px 80px}
+  .map-wrap{margin:0 16px 60px}
+  .mp-bar{left:14px;bottom:14px}
+}
+@media(max-width:640px){
+  body{font-size:15px}
+  .museum-nav{padding:0 12px;height:60px}
+  .nav-logo{font-size:1.2rem}
+  .nav-links{gap:8px}
+  .nav-link{font-size:.54rem;letter-spacing:.04em}
+  .page-header{padding:78px 16px 40px}
+  .page-title{font-size:clamp(2.2rem,8vw,3.2rem)}
+  .landing-content{padding:0 12px}
+  .timeline-container{padding:50px 12px 70px}
+  .timeline-item{margin-bottom:56px}
+  .polaroid-board{padding:30px 12px 70px;min-height:auto}
+  .map-wrap{margin:0 8px 50px}
+  .map-pin-form .mpf-inner{margin:0 12px}
+  .mp-bar{left:10px;bottom:10px;max-width:90vw}
+  .mp-panel{width:calc(100vw - 20px)}
+  .cta-btn{padding:12px 24px;font-size:.7rem}
+}
+@media(max-width:480px){
+  .nav-links{gap:6px}
+  .nav-link{font-size:.5rem}
+  .timeline-img-wrap{aspect-ratio:4/3}
+  .polaroid{width:130px;padding:10px 10px 40px}
+  .map-wrap{grid-template-rows:auto 360px}
 }

@@ -80,6 +80,11 @@ var mpProgressThumb=$('mpProgressThumb'), mpCurrent=$('mpCurrent'), mpDuration=$
 var mpVolume=$('mpVolume');
 var particleCanvas=$('particleCanvas'), cursorCanvas=$('cursorCanvas');
 
+// Touch detection to restore normal cursors on mobile/tablet
+if('ontouchstart' in window || navigator.maxTouchPoints>0){
+  document.documentElement.classList.add('is-touch');
+}
+
 /* ==================================================
    TOAST
 ================================================== */
