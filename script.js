@@ -43,7 +43,7 @@ var GALLERY_DATA = [
 /* ==================================================
    STORAGE
 ================================================== */
-var USERS_KEY='mou_users', SESSION_KEY='mou_session';
+var USERS_KEY='mou_users', SESSION_KEY='mou_session', LAST_PAGE_KEY='mou_last_page';
 function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||{};}catch(e){return{};}}
 function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u));}
 function getUserData(u){try{return JSON.parse(localStorage.getItem('mou_data_'+u))||{};}catch(e){return{};}}
@@ -52,6 +52,8 @@ function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCo
 function getSession(){return localStorage.getItem(SESSION_KEY)||'';}
 function setSession(u){localStorage.setItem(SESSION_KEY,u);}
 function clearSession(){localStorage.removeItem(SESSION_KEY);}
+function setLastPage(p){try{localStorage.setItem(LAST_PAGE_KEY,p);}catch(e){}}
+function getLastPage(){try{return localStorage.getItem(LAST_PAGE_KEY)||'';}catch(e){return'';}}
 
 /* ==================================================
    STATE
@@ -180,6 +182,11 @@ function fmtTime(s){if(isNaN(s)||s===Infinity)return'0:00';var m=Math.floor(s/60
 var tabLogin=$('tabLogin'),tabRegister=$('tabRegister');
 var formLogin=$('formLogin'),formRegister=$('formRegister');
 var loginError=$('loginError'),registerError=$('registerError');
+function showLoginScreen(){
+  loginScreen.classList.remove('hidden','fade-out');
+  mainApp.classList.add('hidden');
+  nav.classList.remove('visible');
+}
 
 tabLogin.addEventListener('click',function(){
   tabLogin.classList.add('active');tabRegister.classList.remove('active');
@@ -236,22 +243,25 @@ function enterApp(username){
   mainApp.classList.remove('hidden');
   restoreState(); buildPlaylistUI(); buildPolaroidBoard();
   buildFilmHoles();
-  var targetPage=userData.lastPage||'landing';
+  var targetPage=userData.lastPage||getLastPage()||'landing';
   setPageImmediate(targetPage);
   if(PLAYLIST.length>0) setTimeout(function(){playTrack(0);},700);
 }
 
-// Auto-enter jika sesi valid, tetap prefills jika tidak valid
-(function(){
-  var s=getSession(), users=getUsers();
-  if(s && users[s]){
-    enterApp(s);
-  }else if(s){
-    clearSession();
-    $('loginUser').value=s;
-    loginError.textContent='Sesi sebelumnya tersimpan. Masukkan password untuk melanjutkan.';
-  }
-})();
+// Auto-enter jika sesi valid; jika kredensial hilang tapi data masih ada, tetap coba masuk
+function tryAutoEnter(){
+  var s=getSession();
+  if(!s){showLoginScreen();return;}
+  var users=getUsers();
+  var data=getUserData(s)||{};
+  var hasCred=!!users[s];
+  var hasData=Object.keys(data).length>0;
+  if(hasCred||hasData){enterApp(s);return;}
+  $('loginUser').value=s;
+  loginError.textContent='Sesi sebelumnya tersimpan. Masukkan password untuk melanjutkan.';
+  showLoginScreen();
+}
+tryAutoEnter();
 
 /* ==================================================
    LOGOUT
@@ -262,9 +272,9 @@ logoutBtn.addEventListener('click',function(){
   stopParticles();updatePillUI();
   currentPage='landing';
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','visible');});
-  loginScreen.classList.remove('hidden','fade-out');
-  mainApp.classList.add('hidden');nav.classList.remove('visible');
+  showLoginScreen();
   $('loginUser').value='';$('loginPass').value='';loginError.textContent='';
+  setLastPage('landing');
   showToast('Berhasil keluar 👋');
 });
 
@@ -313,6 +323,7 @@ function navigateTo(pageId){
     window.scrollTo({top:0,behavior:'smooth'});
     currentPage=pageId;
     if(currentUser){userData.lastPage=pageId;saveUserDataNow();}
+    setLastPage(pageId);
     document.querySelectorAll('.nav-link').forEach(function(l){l.classList.toggle('active',l.dataset.page===pageId);});
     nav.classList.toggle('visible',pageId!=='landing');
     if(pageId==='landing')startParticles(); else stopParticles();
@@ -342,6 +353,7 @@ function setPageImmediate(pageId){
   if(pageId==='gallery') setTimeout(revealPolaroids,200);
   if(pageId==='map')     setTimeout(initMap,200);
   if(currentUser){userData.lastPage=pageId;saveUserDataNow();}
+  setLastPage(pageId);
 }
 
 /* ==================================================
