@@ -45,15 +45,57 @@ var GALLERY_DATA = (typeof GALLERY_DATA!=='undefined' && Array.isArray(GALLERY_D
   ? GALLERY_DATA
   : DEFAULT_GALLERY_DATA.slice();
 if(typeof window!=='undefined'){window.GALLERY_DATA=GALLERY_DATA;}
+var galleryCache=getGalleryCache();
+
+function hydrateGalleryFromCache(){
+  if(!galleryCache)galleryCache={};
+  Object.keys(galleryCache).forEach(function(k){
+    var key='gl-photo-'+k;
+    if(!userData[key]){
+      userData[key]=galleryCache[k];
+    }
+  });
+}
+
+// Pull per-user gallery photos stored individually (mou_gallery_photo_<user>_<idx>)
+function hydrateGalleryFromLocalStorage(user){
+  if(!user)return;
+  var prefix='mou_gallery_photo_'+user+'_';
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k && k.indexOf(prefix)===0){
+      var idx=k.slice(prefix.length);
+      var val=localStorage.getItem(k);
+      if(val){userData['gl-photo-'+idx]=val;}
+    }
+  }
+}
+
+// Pull bundle storage per user
+function hydrateGalleryBundle(user){
+  if(!user)return;
+  var bundle=getGalleryBundle(user);
+  Object.keys(bundle).forEach(function(idx){
+    if(bundle[idx]){userData['gl-photo-'+idx]=bundle[idx];}
+  });
+}
 
 /* ==================================================
    STORAGE
 ================================================== */
-var USERS_KEY='mou_users', SESSION_KEY='mou_session', LAST_PAGE_KEY='mou_last_page';
+var USERS_KEY='mou_users', SESSION_KEY='mou_session', LAST_PAGE_KEY='mou_last_page', GALLERY_CACHE_KEY='mou_gallery_cache';
+function galleryKey(u,i){return 'mou_gallery_photo_'+(u||'')+'_'+i;}
+function galleryBundleKey(u){return 'mou_gallery_bundle_'+(u||'');}
 function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||{};}catch(e){return{};}}
 function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u));}
 function getUserData(u){try{return JSON.parse(localStorage.getItem('mou_data_'+u))||{};}catch(e){return{};}}
 function saveUserData(u,d){try{localStorage.setItem('mou_data_'+u,JSON.stringify(d));}catch(e){showToast('⚠️ Storage penuh.',3500);}}
+function getGalleryCache(){try{return JSON.parse(localStorage.getItem(GALLERY_CACHE_KEY))||{};}catch(e){return{};}}
+function saveGalleryCache(cache){try{localStorage.setItem(GALLERY_CACHE_KEY,JSON.stringify(cache));}catch(e){}}
+function setGalleryPhoto(idx,src){try{localStorage.setItem(galleryKey(currentUser,idx),src);}catch(e){}}
+function getGalleryPhoto(idx){try{return localStorage.getItem(galleryKey(currentUser,idx))||'';}catch(e){return'';}}
+function saveGalleryBundle(user,obj){try{localStorage.setItem(galleryBundleKey(user),JSON.stringify(obj));}catch(e){}}
+function getGalleryBundle(user){try{return JSON.parse(localStorage.getItem(galleryBundleKey(user)))||{};}catch(e){return{};}}
 function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h.toString(36);}
 function getSession(){return localStorage.getItem(SESSION_KEY)||'';}
 function setSession(u){localStorage.setItem(SESSION_KEY,u);}
@@ -248,6 +290,9 @@ function enterApp(username){
     loginScreen.classList.add('fade-out');
     setTimeout(function(){loginScreen.classList.add('hidden');},500);
     mainApp.classList.remove('hidden');
+    hydrateGalleryFromCache();
+    hydrateGalleryFromLocalStorage(currentUser);
+    hydrateGalleryBundle(currentUser);
     restoreState();
     buildPlaylistUI();
     buildPolaroidBoard();
@@ -509,6 +554,8 @@ function buildPolaroidBoard(){
     var glen=Array.isArray(gallery)?gallery.length:0;
     board.style.minHeight=(Math.ceil(glen/cols)*cellH+100)+'px';
 
+    var tilts=(Array.isArray(TILT_PRESETS)&&TILT_PRESETS.length>0)?TILT_PRESETS:[0];
+
     var colHeights=[];for(var c=0;c<cols;c++)colHeights.push(60);
     var gapX=Math.max(20,(boardW-cols*cellW)/(cols+1));
 
@@ -518,7 +565,7 @@ function buildPolaroidBoard(){
       var x=gapX+col*(cellW+gapX);
       var y=colHeights[col];
       colHeights[col]+=cellH+Math.random()*30+20;
-      var tilt=TILT_PRESETS[i%TILT_PRESETS.length]+(Math.random()*2-1);
+      var tilt=tilts[i%tilts.length]+(Math.random()*2-1);
 
       var wrap=document.createElement('div');
       wrap.className='polaroid-wrap pol-hidden';
@@ -552,7 +599,7 @@ function buildPolaroidBoard(){
       pol.appendChild(imgArea);pol.appendChild(actions);pol.appendChild(capArea);
       wrap.appendChild(pol);board.appendChild(wrap);
 
-      var savedSrc=userData['gl-photo-'+i];
+      var savedSrc=getGalleryPhoto(i)||userData['gl-photo-'+i]||galleryCache[i];
       if(savedSrc){img.src=savedSrc;img.style.display='block';imgArea.classList.add('has-photo');wrap.dataset.uploadedSrc=savedSrc;}
 
       viewBtn.addEventListener('click',function(e){e.stopPropagation();openModal(wrap,cap.textContent);});
@@ -581,7 +628,12 @@ function onPolaroidUpload(){
     var img=wrap.querySelector('.polaroid-img');
     img.src=src;img.style.display='block';imgArea.classList.add('has-photo');
     wrap.dataset.uploadedSrc=src;
-    if(currentUser){userData['gl-photo-'+idx]=src;saveUserDataNow();}
+    if(currentUser){
+      userData['gl-photo-'+idx]=src;saveUserDataNow();
+      galleryCache=galleryCache||{};galleryCache[idx]=src;saveGalleryCache(galleryCache);
+      setGalleryPhoto(idx,src);
+      var bundle=getGalleryBundle(currentUser);bundle[idx]=src;saveGalleryBundle(currentUser,bundle);
+    }
     showToast('✓ Foto disimpan!');
   };r.readAsDataURL(file);
 }
