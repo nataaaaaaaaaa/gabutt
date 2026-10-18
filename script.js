@@ -789,30 +789,41 @@ function buildPlaylistUI(){
   });
 }
 
+var resumeBound=false;
 function playTrack(idx){
   if(idx<0||idx>=PLAYLIST.length)return;
   currentTrack=idx;bgMusic.src=PLAYLIST[idx].src;bgMusic.load();
   bgMusic.volume=parseFloat(mpVolume.value)||0.7;
   var p=bgMusic.play();
   if(p!==undefined){
-    p.then(function(){isPlaying=true;updatePillUI();buildPlaylistUI();})
-    .catch(function(){isPlaying=false;updatePillUI();buildPlaylistUI();
-      document.addEventListener('click',function resume(){
-        bgMusic.play().then(function(){isPlaying=true;updatePillUI();buildPlaylistUI();}).catch(function(){});
+    p.catch(function(){
+      // autoplay diblokir: tunggu tap pertama SATU KALI saja
+      if(resumeBound)return;
+      resumeBound=true;
+      var resume=function(ev){
+        // abaikan tap pada kontrol musik, biar tombol pause tetap normal
+        if(ev.target.closest&&ev.target.closest('.mp-bar'))return;
         document.removeEventListener('click',resume);
-      });
+        document.removeEventListener('touchend',resume);
+        resumeBound=false;
+        if(bgMusic.paused)bgMusic.play().catch(function(){});
+      };
+      document.addEventListener('click',resume);
+      document.addEventListener('touchend',resume);
     });
   }
+  buildPlaylistUI();updatePillUI();
 }
+
 function togglePlay(){
   if(currentTrack===-1){playTrack(0);return;}
-  if(isPlaying){bgMusic.pause();isPlaying=false;}
-  else{bgMusic.play().then(function(){isPlaying=true;updatePillUI();}).catch(function(){});}
-  updatePillUI();
+  if(bgMusic.paused){bgMusic.play().catch(function(){});}
+  else{bgMusic.pause();}
 }
-function prevTrack(){var i=currentTrack<=0?PLAYLIST.length-1:currentTrack-1;playTrack(i);}
-function nextTrack(){var i=currentTrack>=PLAYLIST.length-1?0:currentTrack+1;playTrack(i);}
-bgMusic.addEventListener('ended',nextTrack);
+
+// State otomatis sinkron dengan kondisi audio sebenarnya
+bgMusic.addEventListener('play',function(){isPlaying=true;updatePillUI();});
+bgMusic.addEventListener('pause',function(){isPlaying=false;updatePillUI();});
 
 function updatePillUI(){
   mpPlayIcon.textContent=isPlaying?'❚❚':'▶';
@@ -828,8 +839,10 @@ document.addEventListener('click',function(e){if(!mpBar.contains(e.target))mpBar
 
 // Drag the music pill/panel (supports mouse + touch)
 function startMpDrag(e){
-  if(mpBar.classList.contains('panel-open'))return; // avoid dragging while panel open
+  if(mpBar.classList.contains('panel-open'))return;
   if(e.target.closest('.mp-panel'))return;
+  // JANGAN drag kalau yang disentuh adalah tombol
+  if(e.target.closest('button'))return;
   var isMouse=e.type==='mousedown';
   if(isMouse && e.button!==0)return;
   mpDragState.active=true;
@@ -861,7 +874,6 @@ function endMpDrag(e){
   document.removeEventListener('touchend',endMpDrag);
   var r=mpBar.getBoundingClientRect();
   if(currentUser){userData.mpPos={x:r.left,y:r.top};saveUserDataNow();}
-  if(e && e.type==='touchend')e.preventDefault();
 }
 mpBar.addEventListener('mousedown',startMpDrag);
 mpBar.addEventListener('touchstart',startMpDrag,{passive:true});
