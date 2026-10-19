@@ -491,7 +491,7 @@ function togglePlay(){
   if(isPlaying){bgMusic.pause();isPlaying=false;updatePillUI();}
   else{
     bgMusic.play().then(function(){isPlaying=true;autoplayBlocked=false;updatePillUI();})
-      .catch(function(){showToast('⚠️ Musik gagal diputar');});
+      .catch(function(){showToast(' Musik gagal diputar');});
   }
 }
 function prevTrack(){playTrack(currentTrack<=0?PLAYLIST.length-1:currentTrack-1);}
@@ -501,7 +501,7 @@ bgMusic.addEventListener('ended',nextTrack);
 bgMusic.addEventListener('pause',function(){isPlaying=false;updatePillUI();});
 bgMusic.addEventListener('play',function(){isPlaying=true;updatePillUI();});
 bgMusic.addEventListener('error',function(){
-  if(currentTrack>=0)showToast('⚠️ Gagal memuat: '+PLAYLIST[currentTrack].title,3500);
+  if(currentTrack>=0)showToast(' Gagal memuat: '+PLAYLIST[currentTrack].title,3500);
 });
 
 mpPlay.addEventListener('click',function(e){e.stopPropagation();togglePlay();});
