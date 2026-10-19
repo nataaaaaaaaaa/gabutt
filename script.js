@@ -9,18 +9,23 @@
    Taruh file di folder music/ lalu isi src & title
 ================================================== */
 var PLAYLIST = [
-  { title: "LANY - you",  src: "music/LANY - you.mp3"  },
-  { title: "Sal Priadi - Kita usahakan rumah itu",  src: "music/Sal Priadi - Kita usahakan rumah itu.mp3"  },
-  { title: "JVKE - her",  src: "music/JVKE - her.mp3"  },
-  { title: "Raim Laode - Lesung Pipi",  src: "music/Raim Laode - Lesung Pipi.mp3"  },
+  { title:"Lagu 1",  src:"music/lagu1.mp3"  },
+  { title:"Lagu 2",  src:"music/lagu2.mp3"  },
+  { title:"Lagu 3",  src:"music/lagu3.mp3"  },
+  { title:"Lagu 4",  src:"music/lagu4.mp3"  },
+  { title:"Lagu 5",  src:"music/lagu5.mp3"  },
+  { title:"Lagu 6",  src:"music/lagu6.mp3"  },
+  { title:"Lagu 7",  src:"music/lagu7.mp3"  },
+  { title:"Lagu 8",  src:"music/lagu8.mp3"  },
+  { title:"Lagu 9",  src:"music/lagu9.mp3"  },
+  { title:"Lagu 10", src:"music/lagu10.mp3" },
 ];
-if(typeof GALLERY_DATA==='undefined'){ window.GALLERY_DATA=[]; }
 
 /* ==================================================
    GALLERY DATA — 18 slot polaroid
    title=judul caption, emoji=ikon placeholder
 ================================================== */
-var DEFAULT_GALLERY_DATA = [
+var GALLERY_DATA = [
   {title:"Momen yang selalu kami rindukan.",     emoji:"🌸"},
   {title:"Tempat favorit kami berdua.",           emoji:"🌅"},
   {title:"Senyummu adalah hal paling indah.",     emoji:"☀️"},
@@ -40,68 +45,19 @@ var DEFAULT_GALLERY_DATA = [
   {title:"Kamu adalah rumah bagiku.",             emoji:"🫶"},
   {title:"Momen sederhana yang luar biasa.",      emoji:"🌺"},
 ];
-// Gunakan array utama, jatuh ke default jika kosong
-var GALLERY_DATA = (typeof GALLERY_DATA!=='undefined' && Array.isArray(GALLERY_DATA) && GALLERY_DATA.length>0)
-  ? GALLERY_DATA
-  : DEFAULT_GALLERY_DATA.slice();
-if(typeof window!=='undefined'){window.GALLERY_DATA=GALLERY_DATA;}
-var galleryCache=getGalleryCache();
-
-function hydrateGalleryFromCache(){
-  if(!galleryCache)galleryCache={};
-  Object.keys(galleryCache).forEach(function(k){
-    var key='gl-photo-'+k;
-    if(!userData[key]){
-      userData[key]=galleryCache[k];
-    }
-  });
-}
-
-// Pull per-user gallery photos stored individually (mou_gallery_photo_<user>_<idx>)
-function hydrateGalleryFromLocalStorage(user){
-  if(!user)return;
-  var prefix='mou_gallery_photo_'+user+'_';
-  for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    if(k && k.indexOf(prefix)===0){
-      var idx=k.slice(prefix.length);
-      var val=localStorage.getItem(k);
-      if(val){userData['gl-photo-'+idx]=val;}
-    }
-  }
-}
-
-// Pull bundle storage per user
-function hydrateGalleryBundle(user){
-  if(!user)return;
-  var bundle=getGalleryBundle(user);
-  Object.keys(bundle).forEach(function(idx){
-    if(bundle[idx]){userData['gl-photo-'+idx]=bundle[idx];}
-  });
-}
 
 /* ==================================================
    STORAGE
 ================================================== */
-var USERS_KEY='mou_users', SESSION_KEY='mou_session', LAST_PAGE_KEY='mou_last_page', GALLERY_CACHE_KEY='mou_gallery_cache';
-function galleryKey(u,i){return 'mou_gallery_photo_'+(u||'')+'_'+i;}
-function galleryBundleKey(u){return 'mou_gallery_bundle_'+(u||'');}
+var USERS_KEY='mou_users', SESSION_KEY='mou_session';
 function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||{};}catch(e){return{};}}
 function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u));}
 function getUserData(u){try{return JSON.parse(localStorage.getItem('mou_data_'+u))||{};}catch(e){return{};}}
 function saveUserData(u,d){try{localStorage.setItem('mou_data_'+u,JSON.stringify(d));}catch(e){showToast('⚠️ Storage penuh.',3500);}}
-function getGalleryCache(){try{return JSON.parse(localStorage.getItem(GALLERY_CACHE_KEY))||{};}catch(e){return{};}}
-function saveGalleryCache(cache){try{localStorage.setItem(GALLERY_CACHE_KEY,JSON.stringify(cache));}catch(e){}}
-function setGalleryPhoto(idx,src){try{localStorage.setItem(galleryKey(currentUser,idx),src);}catch(e){}}
-function getGalleryPhoto(idx){try{return localStorage.getItem(galleryKey(currentUser,idx))||'';}catch(e){return'';}}
-function saveGalleryBundle(user,obj){try{localStorage.setItem(galleryBundleKey(user),JSON.stringify(obj));}catch(e){}}
-function getGalleryBundle(user){try{return JSON.parse(localStorage.getItem(galleryBundleKey(user)))||{};}catch(e){return{};}}
 function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h.toString(36);}
 function getSession(){return localStorage.getItem(SESSION_KEY)||'';}
 function setSession(u){localStorage.setItem(SESSION_KEY,u);}
 function clearSession(){localStorage.removeItem(SESSION_KEY);}
-function setLastPage(p){try{localStorage.setItem(LAST_PAGE_KEY,p);}catch(e){}}
-function getLastPage(){try{return localStorage.getItem(LAST_PAGE_KEY)||'';}catch(e){return'';}}
 
 /* ==================================================
    STATE
@@ -110,8 +66,6 @@ var currentUser='', userData={}, currentPage='landing';
 var currentTrack=-1, isPlaying=false;
 var mapInstance=null, mapPins=[];
 var leafletMap=null, leafletMarkers=[];
-var mpDragState={active:false,sx:0,sy:0,ox:0,oy:0};
-var isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
 /* ==================================================
    DOM refs
@@ -131,12 +85,6 @@ var mpProgressThumb=$('mpProgressThumb'), mpCurrent=$('mpCurrent'), mpDuration=$
 var mpVolume=$('mpVolume');
 var particleCanvas=$('particleCanvas'), cursorCanvas=$('cursorCanvas');
 
-// Touch detection to restore normal cursors on mobile/tablet
-if(isTouch){
-  document.documentElement.classList.add('is-touch');
-  if(cursorCanvas){cursorCanvas.style.display='none';}
-}
-
 /* ==================================================
    TOAST
 ================================================== */
@@ -152,7 +100,6 @@ function fmtTime(s){if(isNaN(s)||s===Infinity)return'0:00';var m=Math.floor(s/60
    CURSOR TRAIL  ♡ hearts
 ================================================== */
 (function(){
-  if(isTouch){return;} // skip cursor trail on touch devices
   var cvs=cursorCanvas, ctx=cvs.getContext('2d');
   var W=0, H=0, particles=[], mx=0, my=0;
   function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight;}
@@ -230,11 +177,6 @@ function fmtTime(s){if(isNaN(s)||s===Infinity)return'0:00';var m=Math.floor(s/60
 var tabLogin=$('tabLogin'),tabRegister=$('tabRegister');
 var formLogin=$('formLogin'),formRegister=$('formRegister');
 var loginError=$('loginError'),registerError=$('registerError');
-function showLoginScreen(){
-  loginScreen.classList.remove('hidden','fade-out');
-  mainApp.classList.add('hidden');
-  nav.classList.remove('visible');
-}
 
 tabLogin.addEventListener('click',function(){
   tabLogin.classList.add('active');tabRegister.classList.remove('active');
@@ -284,43 +226,20 @@ formRegister.addEventListener('submit',function(e){
    ENTER APP
 ================================================== */
 function enterApp(username){
-  currentUser=username; userData=getUserData(username)||{};
+  currentUser=username; userData=getUserData(username);
   navUsername.textContent=username;
-  try{
-    loginScreen.classList.add('fade-out');
-    setTimeout(function(){loginScreen.classList.add('hidden');},500);
-    mainApp.classList.remove('hidden');
-    hydrateGalleryFromCache();
-    hydrateGalleryFromLocalStorage(currentUser);
-    hydrateGalleryBundle(currentUser);
-    restoreState();
-    buildPlaylistUI();
-    buildPolaroidBoard();
-    buildFilmHoles();
-    var targetPage=userData.lastPage||getLastPage()||'landing';
-    setPageImmediate(targetPage);
-    if(PLAYLIST.length>0) setTimeout(function(){playTrack(0);},700);
-  }catch(err){
-    console.error('enterApp error',err);
-    showToast('Ada error saat memuat. Kembali ke login.',3200);
-    showLoginScreen();
-  }
+  loginScreen.classList.add('fade-out');
+  setTimeout(function(){loginScreen.classList.add('hidden');},500);
+  mainApp.classList.remove('hidden');
+  restoreState(); buildPlaylistUI(); buildPolaroidBoard();
+  buildFilmHoles();
+  var landing=document.getElementById('page-landing');
+  landing.classList.add('active');
+  setTimeout(function(){landing.classList.add('visible');startParticles();},80);
+  if(PLAYLIST.length>0) setTimeout(function(){playTrack(0);},700);
 }
 
-// Auto-enter jika sesi valid; jika kredensial hilang tapi data masih ada, tetap coba masuk
-function tryAutoEnter(){
-  var s=getSession();
-  if(!s){showLoginScreen();return;}
-  var users=getUsers();
-  var data=getUserData(s)||{};
-  var hasCred=!!users[s];
-  var hasData=Object.keys(data).length>0;
-  if(hasCred||hasData){enterApp(s);return;}
-  $('loginUser').value=s;
-  loginError.textContent='Sesi sebelumnya tersimpan. Masukkan password untuk melanjutkan.';
-  showLoginScreen();
-}
-tryAutoEnter();
+(function(){var s=getSession();if(s&&getUsers()[s])enterApp(s);})();
 
 /* ==================================================
    LOGOUT
@@ -331,9 +250,9 @@ logoutBtn.addEventListener('click',function(){
   stopParticles();updatePillUI();
   currentPage='landing';
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','visible');});
-  showLoginScreen();
+  loginScreen.classList.remove('hidden','fade-out');
+  mainApp.classList.add('hidden');nav.classList.remove('visible');
   $('loginUser').value='';$('loginPass').value='';loginError.textContent='';
-  setLastPage('landing');
   showToast('Berhasil keluar 👋');
 });
 
@@ -359,9 +278,8 @@ function restoreState(){
   });
   // Gallery photos restored inside buildPolaroidBoard
   // Map pins
-  userData.mapPins=userData.mapPins||[];mapPins=userData.mapPins;
-  // Music pill position
-  if(userData.mpPos){mpBar.style.left=userData.mpPos.x+'px';mpBar.style.top=userData.mpPos.y+'px';mpBar.style.bottom='auto';}
+  mapPins=userData.mapPins||[];
+  // Letter lock
 }
 document.addEventListener('blur',function(e){
   var el=e.target;
@@ -381,8 +299,6 @@ function navigateTo(pageId){
     from.classList.remove('active');to.classList.add('active');void to.offsetWidth;to.classList.add('visible');
     window.scrollTo({top:0,behavior:'smooth'});
     currentPage=pageId;
-    if(currentUser){userData.lastPage=pageId;saveUserDataNow();}
-    setLastPage(pageId);
     document.querySelectorAll('.nav-link').forEach(function(l){l.classList.toggle('active',l.dataset.page===pageId);});
     nav.classList.toggle('visible',pageId!=='landing');
     if(pageId==='landing')startParticles(); else stopParticles();
@@ -397,23 +313,6 @@ document.querySelectorAll('.nav-link').forEach(function(l){
 document.querySelectorAll('button[data-page]').forEach(function(b){
   b.addEventListener('click',function(){navigateTo(b.dataset.page);});
 });
-
-// Immediate page set on first load (no transitions) used after login/auto-enter
-function setPageImmediate(pageId){
-  var to=document.getElementById('page-'+pageId);
-  if(!to){pageId='landing';to=document.getElementById('page-landing');}
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','visible');});
-  to.classList.add('active','visible');
-  currentPage=pageId;
-  document.querySelectorAll('.nav-link').forEach(function(l){l.classList.toggle('active',l.dataset.page===pageId);});
-  nav.classList.toggle('visible',pageId!=='landing');
-  if(pageId==='landing')startParticles(); else stopParticles();
-  if(pageId==='timeline')setTimeout(revealTimeline,200);
-  if(pageId==='gallery') setTimeout(revealPolaroids,200);
-  if(pageId==='map')     setTimeout(initMap,200);
-  if(currentUser){userData.lastPage=pageId;saveUserDataNow();}
-  setLastPage(pageId);
-}
 
 /* ==================================================
    THEME
@@ -436,8 +335,7 @@ document.querySelectorAll('.theme-opt').forEach(function(btn){
 ================================================== */
 var pCtx, pW=0, pH=0, pPts=[], pActive=false, pRaf;
 function startParticles(){
-  if(!particleCanvas){return;}
-  if(!Array.isArray(pPts)){pPts=[];}
+  if(!particleCanvas)return;
   particleCanvas.classList.add('active');
   pCtx=particleCanvas.getContext('2d');
   pActive=true; if(pPts.length===0)initPts();pLoop();
@@ -538,83 +436,74 @@ document.querySelectorAll('.tl-photo-zone').forEach(function(zone){
 ================================================== */
 var TILT_PRESETS=[-8,-5,-3,0,2,4,7,-6,3,-2,6,-4,1,-7,5,-1,8,-3];
 function buildPolaroidBoard(){
-  try{
-    var board=$('polaroidBoard');if(!board)return;
-    var gallery=[];
-    if(typeof GALLERY_DATA!=='undefined' && Array.isArray(GALLERY_DATA)){
-      gallery=GALLERY_DATA;
-    }
-    if(!Array.isArray(gallery) || gallery.length===0){
-      gallery=DEFAULT_GALLERY_DATA.slice();
-    }
-    board.innerHTML='';
-    var cols=window.innerWidth<500?2:window.innerWidth<800?3:4;
-    var cellW=(window.innerWidth>800?210:180), cellH=cellW+90;
-    var boardW=board.offsetWidth||window.innerWidth-80;
-    var glen=Array.isArray(gallery)?gallery.length:0;
-    board.style.minHeight=(Math.ceil(glen/cols)*cellH+100)+'px';
+  var board=$('polaroidBoard');if(!board)return;
+  board.innerHTML='';
+  // Board needs relative positioning for absolute children; set min-height
+  var cols=window.innerWidth<500?2:window.innerWidth<800?3:4;
+  var cellW=(window.innerWidth>800?210:180), cellH=cellW+90;
+  var boardW=board.offsetWidth||window.innerWidth-80;
+  board.style.minHeight=(Math.ceil(GALLERY_DATA.length/cols)*cellH+100)+'px';
 
-    var tilts=(Array.isArray(TILT_PRESETS)&&TILT_PRESETS.length>0)?TILT_PRESETS:[0];
+  var colHeights=[];for(var c=0;c<cols;c++)colHeights.push(60);
+  var gapX=Math.max(20,(boardW-cols*cellW)/(cols+1));
 
-    var colHeights=[];for(var c=0;c<cols;c++)colHeights.push(60);
-    var gapX=Math.max(20,(boardW-cols*cellW)/(cols+1));
+  GALLERY_DATA.forEach(function(data,i){
+    var col=i%cols;
+    var x=gapX+col*(cellW+gapX);
+    var y=colHeights[col];
+    colHeights[col]+=cellH+Math.random()*30+20;
+    var tilt=TILT_PRESETS[i%TILT_PRESETS.length]+(Math.random()*2-1);
 
-    (Array.isArray(gallery)?gallery:[]).forEach(function(data,i){
-      if(!data)data={title:'',emoji:'🖼️'};
-      var col=i%cols;
-      var x=gapX+col*(cellW+gapX);
-      var y=colHeights[col];
-      colHeights[col]+=cellH+Math.random()*30+20;
-      var tilt=tilts[i%tilts.length]+(Math.random()*2-1);
+    var wrap=document.createElement('div');
+    wrap.className='polaroid-wrap pol-hidden';
+    wrap.style.cssText='left:'+x+'px;top:'+y+'px;z-index:'+(10+i)+';transform:rotate('+tilt+'deg)';
+    wrap.dataset.idx=i;wrap.dataset.tilt=tilt;
 
-      var wrap=document.createElement('div');
-      wrap.className='polaroid-wrap pol-hidden';
-      wrap.style.cssText='left:'+x+'px;top:'+y+'px;z-index:'+(10+i)+';transform:rotate('+tilt+'deg)';
-      wrap.dataset.idx=i;wrap.dataset.tilt=tilt;
+    var pol=document.createElement('div');pol.className='polaroid';
 
-      var pol=document.createElement('div');pol.className='polaroid';
+    var imgArea=document.createElement('div');imgArea.className='polaroid-img-area';
+    var img=document.createElement('img');img.className='polaroid-img';img.alt='';
+    var icon=document.createElement('div');icon.className='polaroid-empty-icon';icon.textContent=data.emoji;
+    imgArea.appendChild(img);imgArea.appendChild(icon);
 
-      var imgArea=document.createElement('div');imgArea.className='polaroid-img-area';
-      var img=document.createElement('img');img.className='polaroid-img';img.alt='';
-      var icon=document.createElement('div');icon.className='polaroid-empty-icon';icon.textContent=data.emoji||'🖼️';
-      imgArea.appendChild(img);imgArea.appendChild(icon);
+    var actions=document.createElement('div');actions.className='polaroid-actions';
+    var viewBtn=document.createElement('button');viewBtn.className='pol-view-btn';viewBtn.textContent='⊕ Lihat';
+    var uid='pgf'+i;
+    var uploadLbl=document.createElement('label');uploadLbl.className='pol-upload-btn';uploadLbl.htmlFor=uid;uploadLbl.textContent='📷 Upload';
+    var fileInp=document.createElement('input');fileInp.type='file';fileInp.accept='image/*';
+    fileInp.className='polaroid-file-input';fileInp.id=uid;fileInp.dataset.pidx=i;
+    fileInp.addEventListener('change',onPolaroidUpload);
+    uploadLbl.appendChild(fileInp);
+    actions.appendChild(viewBtn);actions.appendChild(uploadLbl);
 
-      var actions=document.createElement('div');actions.className='polaroid-actions';
-      var viewBtn=document.createElement('button');viewBtn.className='pol-view-btn';viewBtn.textContent='⊕ Lihat';
-      var uid='pgf'+i;
-      var uploadLbl=document.createElement('label');uploadLbl.className='pol-upload-btn';uploadLbl.htmlFor=uid;uploadLbl.textContent='📷 Upload';
-      var fileInp=document.createElement('input');fileInp.type='file';fileInp.accept='image/*';
-      fileInp.className='polaroid-file-input';fileInp.id=uid;fileInp.dataset.pidx=i;
-      fileInp.addEventListener('change',onPolaroidUpload);
-      uploadLbl.appendChild(fileInp);
-      actions.appendChild(viewBtn);actions.appendChild(uploadLbl);
+    var capArea=document.createElement('div');capArea.className='polaroid-caption-area';
+    var cap=document.createElement('div');cap.className='polaroid-caption editable';
+    cap.contentEditable='true';cap.dataset.key='gl-caption-'+i;
+    var savedCap=userData['gl-caption-'+i];
+    cap.textContent=savedCap||data.title;
+    capArea.appendChild(cap);
 
-      var capArea=document.createElement('div');capArea.className='polaroid-caption-area';
-      var cap=document.createElement('div');cap.className='polaroid-caption editable';
-      cap.contentEditable='true';cap.dataset.key='gl-caption-'+i;
-      var savedCap=userData['gl-caption-'+i];
-      cap.textContent=savedCap||data.title||'';
-      capArea.appendChild(cap);
+    pol.appendChild(imgArea);pol.appendChild(actions);pol.appendChild(capArea);
+    wrap.appendChild(pol);board.appendChild(wrap);
 
-      pol.appendChild(imgArea);pol.appendChild(actions);pol.appendChild(capArea);
-      wrap.appendChild(pol);board.appendChild(wrap);
+    // Restore photo
+    var savedSrc=userData['gl-photo-'+i];
+    if(savedSrc){img.src=savedSrc;img.style.display='block';imgArea.classList.add('has-photo');wrap.dataset.uploadedSrc=savedSrc;}
 
-      var savedSrc=getGalleryPhoto(i)||userData['gl-photo-'+i]||galleryCache[i];
-      if(savedSrc){img.src=savedSrc;img.style.display='block';imgArea.classList.add('has-photo');wrap.dataset.uploadedSrc=savedSrc;}
+    // View modal
+    viewBtn.addEventListener('click',function(e){e.stopPropagation();openModal(wrap,cap.textContent);});
 
-      viewBtn.addEventListener('click',function(e){e.stopPropagation();openModal(wrap,cap.textContent);});
-      makeDraggable(wrap,tilt);
-      pol.addEventListener('mousemove',function(e){
-        var r=pol.getBoundingClientRect();
-        var rx=((e.clientY-r.top)/r.height-.5)*-6;
-        var ry=((e.clientX-r.left)/r.width-.5)*6;
-        pol.style.transform='perspective(600px) rotateX('+rx+'deg) rotateY('+ry+'deg)';
-      });
-      pol.addEventListener('mouseleave',function(){pol.style.transform='';});
+    // Drag
+    makeDraggable(wrap,tilt);
+    // 3D tilt on hover
+    pol.addEventListener('mousemove',function(e){
+      var r=pol.getBoundingClientRect();
+      var rx=((e.clientY-r.top)/r.height-.5)*-6;
+      var ry=((e.clientX-r.left)/r.width-.5)*6;
+      pol.style.transform='perspective(600px) rotateX('+rx+'deg) rotateY('+ry+'deg)';
     });
-  }catch(err){
-    console.error('buildPolaroidBoard error',err);
-  }
+    pol.addEventListener('mouseleave',function(){pol.style.transform='';});
+  });
 }
 
 function onPolaroidUpload(){
@@ -628,12 +517,7 @@ function onPolaroidUpload(){
     var img=wrap.querySelector('.polaroid-img');
     img.src=src;img.style.display='block';imgArea.classList.add('has-photo');
     wrap.dataset.uploadedSrc=src;
-    if(currentUser){
-      userData['gl-photo-'+idx]=src;saveUserDataNow();
-      galleryCache=galleryCache||{};galleryCache[idx]=src;saveGalleryCache(galleryCache);
-      setGalleryPhoto(idx,src);
-      var bundle=getGalleryBundle(currentUser);bundle[idx]=src;saveGalleryBundle(currentUser,bundle);
-    }
+    if(currentUser){userData['gl-photo-'+idx]=src;saveUserDataNow();}
     showToast('✓ Foto disimpan!');
   };r.readAsDataURL(file);
 }
@@ -698,10 +582,59 @@ document.querySelectorAll('.editable').forEach(function(el){
 });
 
 /* ==================================================
-  MAP (Leaflet.js)
+   LOVE LETTER
 ================================================== */
-function ensureMapPins(){if(!userData.mapPins)userData.mapPins=[];return userData.mapPins;}
+var letterLock=$('letterLock'), letterSetPw=$('letterSetPw'), letterContent=$('letterContent');
+var letterPwInput=$('letterPwInput'), letterPwError=$('letterPwError');
 
+if($('toggleLetterPw')){
+  $('toggleLetterPw').addEventListener('click',function(){
+    var i=$('letterPwInput');i.type=i.type==='password'?'text':'password';
+    this.textContent=i.type==='password'?'👁':'🙈';
+  });
+}
+
+$('letterUnlockBtn') && $('letterUnlockBtn').addEventListener('click',function(){
+  var pw=$('letterPwInput').value;
+  letterPwError.textContent='';
+  var saved=userData.letterPw;
+  if(!saved){showSetPw();return;}
+  if(simpleHash(pw)!==saved){letterPwError.textContent='Password salah.';return;}
+  showLetterContent();
+});
+
+$('lockSetBtn') && $('lockSetBtn').addEventListener('click',showSetPw);
+
+function showSetPw(){
+  letterLock.classList.add('hidden');letterSetPw.classList.remove('hidden');
+  letterContent.classList.add('hidden');
+}
+function showLetterContent(){
+  letterLock.classList.add('hidden');letterSetPw.classList.add('hidden');
+  letterContent.classList.remove('hidden');
+}
+
+$('saveLetterPwBtn') && $('saveLetterPwBtn').addEventListener('click',function(){
+  var pw=$('newLetterPw').value;
+  var err=$('newLetterPwError');err.textContent='';
+  if(pw.length<4){err.textContent='Password minimal 4 karakter.';return;}
+  userData.letterPw=simpleHash(pw);saveUserDataNow();
+  letterSetPw.classList.add('hidden');letterLock.classList.remove('hidden');
+  showToast('✓ Password surat disimpan!');
+});
+
+$('cancelSetPwBtn') && $('cancelSetPwBtn').addEventListener('click',function(){
+  letterSetPw.classList.add('hidden');letterLock.classList.remove('hidden');
+});
+
+$('lockAgainBtn') && $('lockAgainBtn').addEventListener('click',function(){
+  letterContent.classList.add('hidden');letterLock.classList.remove('hidden');
+  $('letterPwInput').value='';
+});
+
+/* ==================================================
+   MAP (Leaflet.js)
+================================================== */
 function initMap(){
   if(!window.L){showToast('Map library tidak tersedia.');return;}
   var mapEl=$('leafletMap');
@@ -719,7 +652,7 @@ function initMap(){
 function renderMapPins(){
   if(!leafletMap)return;
   leafletMarkers.forEach(function(m){m.remove();});leafletMarkers=[];
-  ensureMapPins().forEach(function(pin,i){
+  (userData.mapPins||[]).forEach(function(pin,i){
     var marker=L.marker([pin.lat,pin.lng]).addTo(leafletMap);
     marker.bindPopup('<b>'+pin.name+'</b><br><small>'+pin.note+'</small>');
     leafletMarkers.push(marker);
@@ -728,7 +661,7 @@ function renderMapPins(){
 
 function renderMapSidebar(){
   var list=$('mapPinsList');if(!list)return;list.innerHTML='';
-  ensureMapPins().forEach(function(pin,i){
+  (userData.mapPins||[]).forEach(function(pin,i){
     var item=document.createElement('div');item.className='map-pin-item';
     var name=document.createElement('span');name.className='map-pin-name';name.textContent='📍 '+pin.name;
     var note=document.createElement('span');note.className='map-pin-note';note.textContent=pin.note;
@@ -744,24 +677,22 @@ function renderMapSidebar(){
 }
 
 function deletePin(i){
-  if(!ensureMapPins())return;
+  if(!userData.mapPins)return;
   userData.mapPins.splice(i,1);saveUserDataNow();
   renderMapPins();renderMapSidebar();showToast('Pin dihapus.');
 }
 
 $('mapAddBtn') && $('mapAddBtn').addEventListener('click',function(){
-  if(!leafletMap)initMap();
   $('mapPinForm').classList.remove('hidden');
 });
 $('mpfCancel') && $('mpfCancel').addEventListener('click',function(){$('mapPinForm').classList.add('hidden');});
 $('mpfSave') && $('mpfSave').addEventListener('click',function(){
-  if(!leafletMap)initMap();
   var name=$('mpfName').value.trim();
-  var lat=parseFloat($('mpfLat').value.replace(',','.'));
-  var lng=parseFloat($('mpfLng').value.replace(',','.'));
+  var lat=parseFloat($('mpfLat').value);
+  var lng=parseFloat($('mpfLng').value);
   var note=$('mpfNote').value.trim();
   if(!name||isNaN(lat)||isNaN(lng)){showToast('Isi nama, latitude, dan longitude dengan benar.');return;}
-  ensureMapPins();
+  if(!userData.mapPins)userData.mapPins=[];
   userData.mapPins.push({name:name,lat:lat,lng:lng,note:note});
   saveUserDataNow();
   $('mapPinForm').classList.add('hidden');
@@ -789,41 +720,30 @@ function buildPlaylistUI(){
   });
 }
 
-var resumeBound=false;
 function playTrack(idx){
   if(idx<0||idx>=PLAYLIST.length)return;
   currentTrack=idx;bgMusic.src=PLAYLIST[idx].src;bgMusic.load();
   bgMusic.volume=parseFloat(mpVolume.value)||0.7;
   var p=bgMusic.play();
   if(p!==undefined){
-    p.catch(function(){
-      // autoplay diblokir: tunggu tap pertama SATU KALI saja
-      if(resumeBound)return;
-      resumeBound=true;
-      var resume=function(ev){
-        // abaikan tap pada kontrol musik, biar tombol pause tetap normal
-        if(ev.target.closest&&ev.target.closest('.mp-bar'))return;
+    p.then(function(){isPlaying=true;updatePillUI();buildPlaylistUI();})
+    .catch(function(){isPlaying=false;updatePillUI();buildPlaylistUI();
+      document.addEventListener('click',function resume(){
+        bgMusic.play().then(function(){isPlaying=true;updatePillUI();buildPlaylistUI();}).catch(function(){});
         document.removeEventListener('click',resume);
-        document.removeEventListener('touchend',resume);
-        resumeBound=false;
-        if(bgMusic.paused)bgMusic.play().catch(function(){});
-      };
-      document.addEventListener('click',resume);
-      document.addEventListener('touchend',resume);
+      });
     });
   }
-  buildPlaylistUI();updatePillUI();
 }
-
 function togglePlay(){
   if(currentTrack===-1){playTrack(0);return;}
-  if(bgMusic.paused){bgMusic.play().catch(function(){});}
-  else{bgMusic.pause();}
+  if(isPlaying){bgMusic.pause();isPlaying=false;}
+  else{bgMusic.play().then(function(){isPlaying=true;updatePillUI();}).catch(function(){});}
+  updatePillUI();
 }
-
-// State otomatis sinkron dengan kondisi audio sebenarnya
-bgMusic.addEventListener('play',function(){isPlaying=true;updatePillUI();});
-bgMusic.addEventListener('pause',function(){isPlaying=false;updatePillUI();});
+function prevTrack(){var i=currentTrack<=0?PLAYLIST.length-1:currentTrack-1;playTrack(i);}
+function nextTrack(){var i=currentTrack>=PLAYLIST.length-1?0:currentTrack+1;playTrack(i);}
+bgMusic.addEventListener('ended',nextTrack);
 
 function updatePillUI(){
   mpPlayIcon.textContent=isPlaying?'❚❚':'▶';
@@ -831,52 +751,14 @@ function updatePillUI(){
   mpPillTitle.textContent=(currentTrack>=0&&PLAYLIST[currentTrack])?PLAYLIST[currentTrack].title:'No music';
 }
 mpPlay.addEventListener('click',togglePlay);
+mpPlay.addEventListener('touchend',function(e){e.preventDefault();togglePlay();});
 mpPrev.addEventListener('click',prevTrack);
+mpPrev.addEventListener('touchend',function(e){e.preventDefault();prevTrack();});
 mpNext.addEventListener('click',nextTrack);
+mpNext.addEventListener('touchend',function(e){e.preventDefault();nextTrack();});
 mpOpen.addEventListener('click',function(e){e.stopPropagation();mpBar.classList.toggle('panel-open');});
 $('mpClose').addEventListener('click',function(){mpBar.classList.remove('panel-open');});
 document.addEventListener('click',function(e){if(!mpBar.contains(e.target))mpBar.classList.remove('panel-open');});
-
-// Drag the music pill/panel (supports mouse + touch)
-function startMpDrag(e){
-  if(mpBar.classList.contains('panel-open'))return;
-  if(e.target.closest('.mp-panel'))return;
-  // JANGAN drag kalau yang disentuh adalah tombol
-  if(e.target.closest('button'))return;
-  var isMouse=e.type==='mousedown';
-  if(isMouse && e.button!==0)return;
-  mpDragState.active=true;
-  var point=isMouse?{x:e.clientX,y:e.clientY}:{x:e.touches[0].clientX,y:e.touches[0].clientY};
-  mpDragState.sx=point.x; mpDragState.sy=point.y;
-  var r=mpBar.getBoundingClientRect(); mpDragState.ox=r.left; mpDragState.oy=r.top;
-  var moveEvt=isMouse?'mousemove':'touchmove';
-  var endEvt=isMouse?'mouseup':'touchend';
-  document.addEventListener(moveEvt,onMpDrag,{passive:false});
-  document.addEventListener(endEvt,endMpDrag,{passive:false});
-}
-function onMpDrag(e){
-  if(!mpDragState.active)return;
-  var isMouse=e.type==='mousemove';
-  var point=isMouse?{x:e.clientX,y:e.clientY}:{x:e.touches[0].clientX,y:e.touches[0].clientY};
-  var x=mpDragState.ox+(point.x-mpDragState.sx);
-  var y=mpDragState.oy+(point.y-mpDragState.sy);
-  x=Math.max(6,Math.min(window.innerWidth-140,x));
-  y=Math.max(6,Math.min(window.innerHeight-60,y));
-  mpBar.style.left=x+'px'; mpBar.style.top=y+'px'; mpBar.style.bottom='auto';
-  if(!isMouse)e.preventDefault();
-}
-function endMpDrag(e){
-  if(!mpDragState.active)return;
-  mpDragState.active=false;
-  document.removeEventListener('mousemove',onMpDrag);
-  document.removeEventListener('mouseup',endMpDrag);
-  document.removeEventListener('touchmove',onMpDrag);
-  document.removeEventListener('touchend',endMpDrag);
-  var r=mpBar.getBoundingClientRect();
-  if(currentUser){userData.mpPos={x:r.left,y:r.top};saveUserDataNow();}
-}
-mpBar.addEventListener('mousedown',startMpDrag);
-mpBar.addEventListener('touchstart',startMpDrag,{passive:true});
 
 bgMusic.addEventListener('timeupdate',function(){
   if(!bgMusic.duration)return;
