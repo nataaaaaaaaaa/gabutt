@@ -352,3 +352,5 @@ a{color:inherit;}
   /* Toast above music bar */
   .toast { bottom: 90px; left: 16px; right: 16px; max-width: none; text-align: center; }
 }
+
+.nav-logout, .nav-username { display: none !important; }
