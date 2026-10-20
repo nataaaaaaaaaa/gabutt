@@ -4,9 +4,9 @@
 
 /* ===== PLAYLIST — edit di sini ===== */
 var PLAYLIST = [
+  { title:"Raim laode - Menari nari",  src:"music/Menari nari - Raim Laode Lirik Lagu.mp3"  },
   { title:"Raim Laode - Bersenja Gurau",  src:"music/Raim Laode - Bersenja Gurau ( Official Lirik ).mp3"  },
   { title:"Raim Laode - IQRO",  src:"music/Raim Laode - IQRO (Official Lyric Video).mp3"  },
-  { title:"Raim laode - Menari nari",  src:"music/Menari nari - Raim Laode Lirik Lagu.mp3"  },
   { title:"Raim Laode - Lesung Pipi",  src:"music/Raim Laode - Lesung Pipi.mp3"  }
 ];
 
@@ -181,8 +181,9 @@ function navigateTo(pageId){
     document.querySelectorAll('.nav-link').forEach(function(l){l.classList.toggle('active',l.dataset.page===pageId);});
     nav.classList.toggle('visible',pageId!=='landing');
     if(pageId==='landing')startParticles(); else stopParticles();
-    if(pageId==='timeline')setTimeout(revealTimeline,280);
+    if(pageId==='timeline'){setTimeout(revealTimeline,280);setTimeout(updateTimelineFx,500);}
     if(pageId==='gallery') setTimeout(revealPolaroids,200);
+     if(pageId==='letter')  setTimeout(typeLetter,500);
   },360);
 }
 document.querySelectorAll('.nav-link').forEach(function(l){
@@ -265,6 +266,141 @@ window.addEventListener('scroll',function(){
   }
   if(currentPage!=='landing')nav.style.boxShadow=window.scrollY>10?'0 2px 24px var(--shadow)':'none';
 });
+
+/* ===== CONFETTI (kartu ulang tahun) ===== */
+var confettiCanvas=null, confettiCtx=null, confettiPieces=[], confettiRaf=null, lastConfetti=0;
+function launchConfetti(){
+  if(!confettiCanvas){
+    confettiCanvas=document.createElement('canvas');
+    confettiCanvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99990;';
+    document.body.appendChild(confettiCanvas);
+    confettiCtx=confettiCanvas.getContext('2d');
+  }
+  confettiCanvas.width=window.innerWidth; confettiCanvas.height=window.innerHeight;
+  var colors=['#c9a96e','#e8d5b0','#f4a0b0','#d4758a','#9b7fd4','#7a9e7e','#ffffff'];
+  for(var i=0;i<160;i++){
+    var fromLeft=i%2===0;
+    confettiPieces.push({
+      x:fromLeft?0:confettiCanvas.width,
+      y:confettiCanvas.height*0.7,
+      vx:(fromLeft?1:-1)*(Math.random()*9+4),
+      vy:-(Math.random()*13+7),
+      size:Math.random()*7+5,
+      rot:Math.random()*Math.PI*2,
+      vr:(Math.random()-.5)*.35,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      life:1
+    });
+  }
+  if(!confettiRaf)confettiLoop();
+}
+function confettiLoop(){
+  var w=confettiCanvas.width, h=confettiCanvas.height;
+  confettiCtx.clearRect(0,0,w,h);
+  confettiPieces=confettiPieces.filter(function(p){return p.life>0&&p.y<h+30;});
+  confettiPieces.forEach(function(p){
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.vx*=0.99; p.rot+=p.vr; p.life-=0.004;
+    confettiCtx.save();
+    confettiCtx.translate(p.x,p.y); confettiCtx.rotate(p.rot);
+    confettiCtx.globalAlpha=Math.max(0,Math.min(1,p.life*1.5));
+    confettiCtx.fillStyle=p.color;
+    confettiCtx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+    confettiCtx.restore();
+  });
+  if(confettiPieces.length>0){confettiRaf=requestAnimationFrame(confettiLoop);}
+  else{confettiRaf=null; confettiCtx.clearRect(0,0,w,h);}
+}
+(function(){
+  var card=document.querySelector('.future-card');
+  if(!card||!('IntersectionObserver' in window))return;
+  new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting&&Date.now()-lastConfetti>10000){
+        lastConfetti=Date.now(); launchConfetti();
+      }
+    });
+  },{threshold:0.6}).observe(card);
+})();
+
+/* ===== SURAT: efek mengetik ===== */
+var letterTyped=false;
+function typeLetter(){
+  if(letterTyped)return;
+  var body=document.querySelector('.letter-body');
+  if(!body)return;
+  letterTyped=true;
+  var fullText=body.textContent;
+  var tail=[document.querySelector('.letter-closing'),document.querySelector('.letter-signature'),document.querySelector('.letter-wax')];
+  body.style.minHeight=body.offsetHeight+'px';
+  body.textContent='';
+  tail.forEach(function(el){ if(el){el.style.opacity='0'; el.style.transition='opacity 1.2s ease';} });
+  var i=0, done=false, timer=null;
+  function finish(){
+    if(done)return; done=true; clearTimeout(timer);
+    body.textContent=fullText;
+    tail.forEach(function(el){ if(el)el.style.opacity=''; });
+  }
+  function step(){
+    if(done)return;
+    i++;
+    body.textContent=fullText.slice(0,i)+'|';
+    if(i>=fullText.length){finish();return;}
+    var ch=fullText.charAt(i-1);
+    var delay=28;
+    if(ch==='.'||ch==='!'||ch==='?')delay=380;
+    else if(ch===',')delay=160;
+    else if(ch==='\n')delay=300;
+    timer=setTimeout(step,delay);
+  }
+  document.querySelector('.letter-paper').addEventListener('click',finish);
+  step();
+}
+
+/* ===== TIMELINE: garis tergambar, titik menyala ===== */
+var tlFill=null;
+function updateTimelineFx(){
+  if(currentPage!=='timeline')return;
+  var container=document.querySelector('.timeline-container');
+  if(!container)return;
+  if(!tlFill){
+    tlFill=document.createElement('div');
+    tlFill.className='timeline-line-fill';
+    container.appendChild(tlFill);
+    container.classList.add('fx');
+  }
+  var trigger=window.innerHeight*0.6;
+  var rect=container.getBoundingClientRect();
+  var h=Math.max(0,Math.min(rect.height,trigger-rect.top));
+  tlFill.style.height=h+'px';
+  document.querySelectorAll('.timeline-item').forEach(function(item){
+    var dot=item.querySelector('.timeline-dot');
+    if(!dot)return;
+    item.classList.toggle('lit',dot.getBoundingClientRect().top<trigger);
+  });
+}
+window.addEventListener('scroll',updateTimelineFx);
+window.addEventListener('resize',updateTimelineFx);
+
+/* ===== LANDING: hati & kelopak melayang ===== */
+(function(){
+  var host=document.querySelector('.landing-bg');
+  if(!host)return;
+  var symbols=['♥','✿','❀','♡'];
+  var colors=['var(--gold)','var(--gold-l)','#f4a0b0','#d4758a'];
+  var count=window.innerWidth<600?10:18;
+  for(var i=0;i<count;i++){
+    var p=document.createElement('span');
+    p.className='petal';
+    p.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+    p.style.left=(Math.random()*100)+'%';
+    p.style.fontSize=(Math.random()*14+12)+'px';
+    p.style.color=colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration=(Math.random()*9+10)+'s';
+    p.style.animationDelay=(-Math.random()*18)+'s';
+    p.style.setProperty('--drift',((Math.random()-.5)*160)+'px');
+    host.appendChild(p);
+  }
+})();
 
 function renderTlPhoto(zone,src){
   var img=document.createElement('img');
@@ -428,69 +564,6 @@ document.querySelectorAll('.editable').forEach(function(el){
   el.addEventListener('blur',function(){if(el.textContent.trim()==='')el.textContent='...';});
 });
 
-/* ===== MAP ===== */
-function initMap(){
-  if(!window.L){showToast('Map library tidak tersedia (cek internet).');return;}
-  var mapEl=$('leafletMap');
-  if(!mapEl)return;
-  if(leafletMap){leafletMap.invalidateSize();return;}
-  leafletMap=L.map('leafletMap').setView([-2.5,118],5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap contributors',maxZoom:18
-  }).addTo(leafletMap);
-  renderMapPins(); renderMapSidebar();
-}
-function renderMapPins(){
-  if(!leafletMap)return;
-  leafletMarkers.forEach(function(m){m.remove();}); leafletMarkers=[];
-  (userData.mapPins||[]).forEach(function(pin){
-    var marker=L.marker([pin.lat,pin.lng]).addTo(leafletMap);
-    var box=document.createElement('div');
-    var b=document.createElement('b'); b.textContent=pin.name;
-    var s=document.createElement('small'); s.textContent=pin.note||'';
-    box.appendChild(b); box.appendChild(document.createElement('br')); box.appendChild(s);
-    marker.bindPopup(box);
-    leafletMarkers.push(marker);
-  });
-}
-function renderMapSidebar(){
-  var list=$('mapPinsList'); if(!list)return; list.innerHTML='';
-  (userData.mapPins||[]).forEach(function(pin,i){
-    var item=document.createElement('div'); item.className='map-pin-item';
-    var name=document.createElement('span'); name.className='map-pin-name'; name.textContent='📍 '+pin.name;
-    var note=document.createElement('span'); note.className='map-pin-note'; note.textContent=pin.note||'';
-    var del=document.createElement('button'); del.className='map-pin-del'; del.textContent='✕'; del.title='Hapus';
-    del.addEventListener('click',function(e){e.stopPropagation();deletePin(i);});
-    item.appendChild(del); item.appendChild(name); item.appendChild(note);
-    item.addEventListener('click',function(){
-      if(leafletMap)leafletMap.flyTo([pin.lat,pin.lng],14);
-      if(leafletMarkers[i])leafletMarkers[i].openPopup();
-    });
-    list.appendChild(item);
-  });
-}
-function deletePin(i){
-  if(!userData.mapPins)return;
-  userData.mapPins.splice(i,1); saveUserDataNow();
-  renderMapPins(); renderMapSidebar(); showToast('Pin dihapus.');
-}
-if($('mapAddBtn'))$('mapAddBtn').addEventListener('click',function(){$('mapPinForm').classList.remove('hidden');});
-if($('mpfCancel'))$('mpfCancel').addEventListener('click',function(){$('mapPinForm').classList.add('hidden');});
-if($('mpfSave'))$('mpfSave').addEventListener('click',function(){
-  var name=$('mpfName').value.trim();
-  var lat=parseFloat($('mpfLat').value), lng=parseFloat($('mpfLng').value);
-  var note=$('mpfNote').value.trim();
-  if(!name||isNaN(lat)||isNaN(lng)){showToast('Isi nama, latitude, dan longitude dengan benar.');return;}
-  if(!userData.mapPins)userData.mapPins=[];
-  userData.mapPins.push({name:name,lat:lat,lng:lng,note:note});
-  saveUserDataNow();
-  $('mapPinForm').classList.add('hidden');
-  $('mpfName').value='';$('mpfLat').value='';$('mpfLng').value='';$('mpfNote').value='';
-  renderMapPins(); renderMapSidebar();
-  if(leafletMap)leafletMap.flyTo([lat,lng],14);
-  showToast('📍 Pin "'+name+'" ditambahkan!');
-});
-
 /* ===== MUSIC PLAYER ===== */
 function buildPlaylistUI(){
   mpSlots.innerHTML='';
@@ -558,16 +631,30 @@ mpClose.addEventListener('click',function(e){e.stopPropagation();mpBar.classList
 document.addEventListener('click',function(e){if(!mpBar.contains(e.target))mpBar.classList.remove('panel-open');});
 
 bgMusic.addEventListener('timeupdate',function(){
-  if(!bgMusic.duration)return;
+    if(!bgMusic.duration||seeking)return;
   var pct=(bgMusic.currentTime/bgMusic.duration)*100;
   mpProgressFill.style.width=pct+'%'; mpProgressThumb.style.left=pct+'%';
   mpCurrent.textContent=fmtTime(bgMusic.currentTime); mpDuration.textContent=fmtTime(bgMusic.duration);
 });
-mpProgressTrack.addEventListener('click',function(e){
+var seeking=false;
+function seekFromEvent(e){
   if(!bgMusic.duration)return;
   var rect=mpProgressTrack.getBoundingClientRect();
-  bgMusic.currentTime=((e.clientX-rect.left)/rect.width)*bgMusic.duration;
+  var pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+  bgMusic.currentTime=pct*bgMusic.duration;
+  mpProgressFill.style.width=(pct*100)+'%';
+  mpProgressThumb.style.left=(pct*100)+'%';
+  mpCurrent.textContent=fmtTime(bgMusic.currentTime);
+}
+function endSeek(){seeking=false;}
+mpProgressTrack.addEventListener('pointerdown',function(e){
+  seeking=true;
+  try{mpProgressTrack.setPointerCapture(e.pointerId);}catch(err){}
+  seekFromEvent(e);
 });
+mpProgressTrack.addEventListener('pointermove',function(e){if(seeking)seekFromEvent(e);});
+mpProgressTrack.addEventListener('pointerup',endSeek);
+mpProgressTrack.addEventListener('pointercancel',endSeek);
 mpVolume.addEventListener('input',function(){bgMusic.volume=parseFloat(this.value);});
 bgMusic.volume=0.7;
 
@@ -577,6 +664,64 @@ document.addEventListener('click',function(e){
     bgMusic.play().then(function(){isPlaying=true;autoplayBlocked=false;updatePillUI();}).catch(function(){});
   }
 });
+
+/* ===== MUSIC PLAYER: bisa digeser ===== */
+(function(){
+  var pill=mpBar.querySelector('.mp-pill');
+  var panel=mpBar.querySelector('.mp-panel');
+  if(!pill)return;
+  var grip=document.createElement('span');
+  grip.className='mp-grip'; grip.textContent='⋮⋮';
+  pill.insertBefore(grip,pill.firstChild);
+
+  var dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+
+  function placePanel(){
+    var r=mpBar.getBoundingClientRect();
+    mpBar.classList.toggle('up',(r.top+r.height/2)>window.innerHeight/2);
+    var pw=panel?panel.offsetWidth:300;
+    mpBar.classList.toggle('right',r.left+pw>window.innerWidth-8);
+  }
+  function clampPos(l,t){
+    var maxL=window.innerWidth-mpBar.offsetWidth-4;
+    var maxT=window.innerHeight-mpBar.offsetHeight-4;
+    return [Math.max(4,Math.min(maxL,l)),Math.max(4,Math.min(maxT,t))];
+  }
+
+  pill.addEventListener('pointerdown',function(e){
+    if(e.target.closest('button'))return;
+    var r=mpBar.getBoundingClientRect();
+    dragging=true; moved=false;
+    sx=e.clientX; sy=e.clientY; ox=r.left; oy=r.top;
+    try{pill.setPointerCapture(e.pointerId);}catch(err){}
+  });
+  pill.addEventListener('pointermove',function(e){
+    if(!dragging)return;
+    var dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!moved){
+      if(Math.abs(dx)+Math.abs(dy)<4)return;
+      moved=true;
+      mpBar.classList.add('moved');
+      mpBar.style.left=ox+'px'; mpBar.style.top=oy+'px';
+      mpBar.style.bottom='auto'; mpBar.style.transform='none';
+    }
+    var p=clampPos(ox+dx,oy+dy);
+    mpBar.style.left=p[0]+'px'; mpBar.style.top=p[1]+'px';
+  });
+  function endDrag(){
+    if(!dragging)return;
+    dragging=false;
+    if(moved)placePanel();
+  }
+  pill.addEventListener('pointerup',endDrag);
+  pill.addEventListener('pointercancel',endDrag);
+  window.addEventListener('resize',function(){
+    if(!mpBar.classList.contains('moved'))return;
+    var p=clampPos(parseFloat(mpBar.style.left)||0,parseFloat(mpBar.style.top)||0);
+    mpBar.style.left=p[0]+'px'; mpBar.style.top=p[1]+'px';
+    placePanel();
+  });
+})();
 
 /* ===== START (tanpa login) ===== */
 function startApp(){

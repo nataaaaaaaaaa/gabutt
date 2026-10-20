@@ -116,6 +116,22 @@ a{color:inherit;}
 .mp-slot-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;opacity:0;transition:opacity .2s,background .5s;}
 .mp-slot.active .mp-slot-dot{opacity:1;}
 
+/* Pemutar musik bisa digeser */
+.mp-pill{touch-action:none;}
+.mp-grip{font-size:.8rem;letter-spacing:-2px;color:var(--muted);opacity:.6;padding:0 4px 0 2px;flex-shrink:0;user-select:none;}
+.mp-bar.moved .mp-panel{position:absolute;left:0;top:calc(100% + 10px);transform-origin:top left;}
+.mp-bar.moved.up .mp-panel{top:auto;bottom:calc(100% + 10px);transform-origin:bottom left;}
+.mp-bar.moved.right .mp-panel{left:auto;right:0;}
+
+/* Bar progres & volume lebih mudah digeser */
+.mp-progress-track{touch-action:none;}
+.mp-progress-track::before{content:'';position:absolute;left:0;right:0;top:-10px;bottom:-10px;}
+.mp-progress-thumb{width:14px;height:14px;transform:translate(-50%,-50%) scale(1);pointer-events:none;}
+.mp-progress-track:hover .mp-progress-thumb{transform:translate(-50%,-50%) scale(1.2);}
+.mp-volume{height:6px;touch-action:none;}
+.mp-volume::-webkit-slider-thumb{width:16px;height:16px;}
+.mp-volume::-moz-range-thumb{width:16px;height:16px;border:none;border-radius:50%;background:var(--gold);cursor:pointer;}
+
 /* ======= NAV ======= */
 .museum-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 48px;height:68px;display:flex;align-items:center;gap:40px;background:var(--nav-bg);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);transform:translateY(-100%);transition:transform var(--tr),box-shadow .3s,background .5s,border-color .5s;}
 .museum-nav.visible{transform:translateY(0);}
@@ -131,9 +147,13 @@ a{color:inherit;}
 .nav-logout:hover{border-color:var(--gold);color:var(--text);}
 
 /* ======= PAGES ======= */
-.page{min-height:100vh;display:none;opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease;}
+.page{min-height:100vh;display:none;opacity:0;transform:translateY(22px) scale(.985);filter:blur(8px);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.7,.2,1),filter .6s ease;}
 .page.active{display:block;}
-.page.visible{opacity:1;transform:translateY(0);}
+.page.visible{opacity:1;transform:translateY(0) scale(1);filter:none;}
+@media (prefers-reduced-motion:reduce){
+  .page{transition:opacity .3s ease;transform:none;filter:none;}
+  .page.visible{transform:none;}
+}
 
 /* ======= PAGE HEADER ======= */
 .page-header{padding:110px 48px 60px;text-align:center;border-bottom:1px solid var(--border);position:relative;transition:border-color .5s;}
@@ -164,6 +184,23 @@ a{color:inherit;}
 .landing-scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:2;animation:fadeUp 2s ease forwards;opacity:0;animation-delay:.8s;}
 .landing-scroll-hint span{font-family:var(--font-sans);font-size:.55rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);transition:color .5s;}
 .scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--gold-l),transparent);animation:scrollPulse 2s ease infinite;}
+
+/* Landing: judul bercahaya + kelopak melayang */
+.lt-serif{animation:titleIn 2.2s cubic-bezier(.2,.7,.2,1) both;}
+.lt-script{animation:titleGlow 4.5s ease-in-out 1.6s infinite;}
+@keyframes titleIn{from{opacity:0;letter-spacing:.28em;filter:blur(6px)}to{opacity:1;letter-spacing:0;filter:blur(0)}}
+@keyframes titleGlow{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 26px var(--gold),0 0 64px rgba(201,169,110,.35)}}
+.petal{position:absolute;top:-40px;pointer-events:none;z-index:1;opacity:0;line-height:1;animation:petalFall linear infinite;}
+@keyframes petalFall{
+  0%{transform:translate3d(0,-40px,0) rotate(0deg);opacity:0}
+  10%{opacity:.75}
+  90%{opacity:.75}
+  100%{transform:translate3d(var(--drift),110vh,0) rotate(360deg);opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .petal{display:none}
+  .lt-serif,.lt-script{animation:none}
+}
 
 /* ======= FILM STRIP ======= */
 .film-strip-top,.film-strip-bottom{background:var(--film-bg);padding:10px 0;transition:background .5s;overflow:hidden;}
@@ -202,6 +239,16 @@ a{color:inherit;}
 .timeline-heading{font-family:var(--font-serif);font-size:1.35rem;font-weight:400;color:var(--text);margin-bottom:10px;display:block;transition:color .5s;}
 .timeline-text{font-family:var(--font-sans);font-size:.82rem;font-weight:300;color:var(--muted);line-height:1.8;display:block;transition:color .5s;}
 
+/* Timeline: garis tergambar, titik menyala, foto zoom */
+.timeline-line-fill{position:absolute;left:50%;top:0;width:2px;height:0;background:linear-gradient(to bottom,var(--gold-l),var(--gold));transform:translateX(-50%);z-index:1;box-shadow:0 0 12px var(--gold);transition:height .25s ease-out;pointer-events:none;}
+.timeline-item.lit .timeline-dot{background:var(--gold);box-shadow:0 0 0 4px var(--bg),0 0 18px var(--gold);}
+.timeline-item.lit .dot-ring{opacity:1;}
+.timeline-container.fx .timeline-img-wrap img,
+.timeline-container.fx .timeline-item .tl-placeholder{transform:scale(1.18);transition:transform 1.6s cubic-bezier(.2,.7,.2,1),filter .25s,background .5s;}
+.timeline-container.fx .timeline-item.lit .timeline-img-wrap img,
+.timeline-container.fx .timeline-item.lit .tl-placeholder{transform:scale(1);}
+@media(max-width:768px){.timeline-line-fill{left:18px;}}
+
 /* ======= POLAROID GALLERY ======= */
 .polaroid-board{min-height:80vh;padding:60px 40px 100px;background:var(--bg2);position:relative;transition:background .5s;}
 .polaroid-wrap{position:absolute;cursor:pointer;user-select:none;transition:filter .3s;will-change:transform;}
@@ -223,9 +270,14 @@ a{color:inherit;}
 .pol-upload-btn{background:var(--gold);color:#fff;}
 .pol-upload-btn:hover{opacity:.85;}
 .polaroid-file-input{display:none;}
+
+/* Kilau saat disentuh */
+.polaroid-img-area::after{content:'';position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);transform:skewX(-20deg);pointer-events:none;z-index:3;}
+.polaroid-wrap:hover .polaroid-img-area::after{animation:polShine .9s ease;}
+@keyframes polShine{from{left:-75%}to{left:130%}}
 /* Reveal animation */
-.polaroid-wrap.pol-hidden{opacity:0;transform:rotateY(90deg) scale(.8)!important;}
-.polaroid-wrap.pol-reveal{transition:opacity .6s ease,transform .6s cubic-bezier(.34,1.56,.64,1)!important;}
+.polaroid-wrap.pol-hidden{opacity:0;transform:translateY(-650px) rotate(-14deg) scale(.92)!important;}
+.polaroid-wrap.pol-reveal{transition:opacity .5s ease,transform .95s cubic-bezier(.34,1.56,.64,1)!important;}
 .polaroid-wrap.pol-visible{opacity:1;}
 
 /* ======= LOVE LETTER ======= */
