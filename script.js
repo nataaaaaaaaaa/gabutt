@@ -12,24 +12,53 @@ var PLAYLIST = [
 
 /* ===== GALLERY DATA ===== */
 var GALLERY_DATA = [
-  {title:"Momen yang selalu kami rindukan.",     emoji:"🌸"},
-  {title:"Tempat favorit kami berdua.",           emoji:"🌅"},
-  {title:"Senyummu adalah hal paling indah.",     emoji:"☀️"},
-  {title:"Petualangan yang tidak terlupakan.",    emoji:"🗺️"},
-  {title:"Ketika waktu terasa berhenti.",         emoji:"🕯️"},
-  {title:"Momen yang kami abadikan.",             emoji:"🎞️"},
-  {title:"Cerita di balik foto ini...",           emoji:"💌"},
-  {title:"Selalu terasa seperti mimpi.",          emoji:"✨"},
-  {title:"Bersama, segalanya terasa mungkin.",    emoji:"🌿"},
-  {title:"Sudut kecil dunia yang kami cintai.",   emoji:"🏡"},
-  {title:"Tawa yang paling tulus.",               emoji:"😄"},
-  {title:"Langit yang kami tatap bersama.",       emoji:"🌙"},
-  {title:"Perjalanan panjang yang indah.",        emoji:"🛤️"},
-  {title:"Dua hati, satu cerita.",                emoji:"💞"},
-  {title:"Setiap detail yang kami ingat.",        emoji:"🔮"},
-  {title:"Satu frame, seribu kenangan.",          emoji:"🎨"},
-  {title:"Kamu adalah rumah bagiku.",             emoji:"🫶"},
-  {title:"Momen sederhana yang luar biasa.",      emoji:"🌺"}
+  {title:"Bunga Kedua🌸.",     emoji:"🌸"},
+  {title:"Nasgor Dinoyooo.",           emoji:"🌅"},
+  {title:"Strawberryyy.",     emoji:"☀️"},
+  {title:"Cukinggg.",    emoji:"🗺️"},
+  {title:"Cutee>,<.",         emoji:"🕯️"},
+  {title:"Cerminn.",         emoji:"🕯️"},
+  {title:"Senjaa.",             emoji:"🎞️"},
+  {title:"Zombiee.",           emoji:"💌"},
+  {title:"Nyaman bgtt.",          emoji:"✨"},
+  {title:"Lucuuk.",    emoji:"🌿"},
+  {title:"Susah bedain yang mana bunga nya.",   emoji:"🏡"},
+  {title:"Postingan Pertama.",               emoji:"😄"},
+  {title:"Another Flower.",       emoji:"🌙"},
+  {title:"Kediri iri iri.",        emoji:"🛤️"},
+  {title:"Metalll.",                emoji:"💞"},
+  {title:"Cutee.",        emoji:"🔮"},
+  {title:"It's your Birthdayy.",          emoji:"🎨"},
+  {title:"Kok kamu gak keliatann.",             emoji:"🫶"},
+  {title:"First Gacoan date.",      emoji:"🌺"},
+  {title:"Bunga Lagii.",      emoji:"🌺"},
+  {title:"Doublee OII.",      emoji:"🌺"},
+  {title:"Metalll.",      emoji:"🌺"},
+  {title:"Sukakk.",      emoji:"🌺"},
+  {title:"Birthdayy.",      emoji:"🌺"},
+  {title:"Coban Siuk.",      emoji:"🌺"},
+  {title:"Cantik Banget Cewe Gue JIRRR.",      emoji:"🌺"},
+  {title:"Kiyowooo.",      emoji:"🌺"},
+  {title:"Jelek bgt aku.",      emoji:"🌺"},
+  {title:"Momen sederhana yang luar biasa.",      emoji:"🌺"},
+  {title:"Cantiknyo OII.",      emoji:"🌺"},
+  {title:"Metalll.",      emoji:"🌺"},
+  {title:"Kayutangann.",      emoji:"🌺"},
+  {title:"Triplee.",      emoji:"🌺"},
+  {title:"Cewe Gue Tuuu.",      emoji:"🌺"},
+  {title:"AWWW.",      emoji:"🌺"},
+  {title:"Maluuu.",      emoji:"🌺"},
+  {title:"Nitendo Datee.",      emoji:"🌺"},
+  {title:"Lucukk.",      emoji:"🌺"},
+  {title:"Cantikkk.",      emoji:"🌺"},
+  {title:"Punya Guee Niii.",      emoji:"🌺"},
+  {title:"Jari Manis itu Lagi.",      emoji:"🌺"},
+  {title:"Senja.",      emoji:"🌺"},
+  {title:"Strawberryyy.",      emoji:"🌺"},
+  {title:"Cantikkk.",      emoji:"🌺"},
+  {title:"Mirror.",      emoji:"🌺"},
+  {title:"Lucuu.",      emoji:"🌺"},
+  {title:"Happy Birthday LOVEEE.",      emoji:"🌺"}
 ];
 
 /* ===== STORAGE ===== */
@@ -41,7 +70,6 @@ function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCo
 /* ===== STATE ===== */
 var userData={}, currentPage='landing';
 var currentTrack=-1, isPlaying=false, autoplayBlocked=false;
-var leafletMap=null, leafletMarkers=[];
 
 /* ===== DOM ===== */
 var $=function(id){return document.getElementById(id);};
@@ -117,12 +145,21 @@ function restoreState(){
     htmlEl.setAttribute('data-theme',userData.theme);
     document.querySelectorAll('.theme-opt').forEach(function(b){b.classList.toggle('active',b.dataset.theme===userData.theme);});
   }
-  document.querySelectorAll('[data-key]').forEach(function(el){
+    document.querySelectorAll('[data-key]').forEach(function(el){
+    if(el.dataset.key.indexOf('tl-')===0)return;
     var v=userData[el.dataset.key];
     if(v!==undefined&&v!==''){ if(el.tagName==='TEXTAREA')el.value=v; else el.textContent=v; }
   });
   document.querySelectorAll('.tl-photo-zone').forEach(function(zone){
-    var src=userData['tl-photo-'+zone.dataset.tl]; if(src)renderTlPhoto(zone,src);
+    var i=zone.dataset.tl;
+    var path='foto/tl-'+i+'.jpg';
+    var test=new Image();
+    test.onload=function(){renderTlPhoto(zone,path);};
+    test.onerror=function(){
+      var src=userData['tl-photo-'+i];
+      if(src)renderTlPhoto(zone,src);
+    };
+    test.src=path;
   });
 }
 document.addEventListener('blur',function(e){
@@ -146,7 +183,6 @@ function navigateTo(pageId){
     if(pageId==='landing')startParticles(); else stopParticles();
     if(pageId==='timeline')setTimeout(revealTimeline,280);
     if(pageId==='gallery') setTimeout(revealPolaroids,200);
-    if(pageId==='map')     setTimeout(initMap,300);
   },360);
 }
 document.querySelectorAll('.nav-link').forEach(function(l){
@@ -297,14 +333,24 @@ function buildPolaroidBoard(){
     var capArea=document.createElement('div'); capArea.className='polaroid-caption-area';
     var cap=document.createElement('div'); cap.className='polaroid-caption editable';
     cap.contentEditable='true'; cap.dataset.key='gl-caption-'+i;
-    cap.textContent=userData['gl-caption-'+i]||data.title;
+    cap.textContent=data.title;
     capArea.appendChild(cap);
 
     pol.appendChild(imgArea); pol.appendChild(actions); pol.appendChild(capArea);
     wrap.appendChild(pol); board.appendChild(wrap);
 
-    var savedSrc=userData['gl-photo-'+i];
-    if(savedSrc){img.src=savedSrc;img.style.display='block';imgArea.classList.add('has-photo');wrap.dataset.uploadedSrc=savedSrc;}
+       function showPhoto(src){
+      img.src=src; img.style.display='block';
+      imgArea.classList.add('has-photo'); wrap.dataset.uploadedSrc=src;
+    }
+    var path='foto/gl-'+i+'.jpg';
+    var test=new Image();
+    test.onload=function(){showPhoto(path);};
+    test.onerror=function(){
+      var saved=userData['gl-photo-'+i];
+      if(saved)showPhoto(saved);
+    };
+    test.src=path;
 
     viewBtn.addEventListener('click',function(e){e.stopPropagation();openModal(wrap,cap.textContent);});
     makeDraggable(wrap,tilt);
